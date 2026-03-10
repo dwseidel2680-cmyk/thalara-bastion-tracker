@@ -102,12 +102,14 @@
 <div class="container">
   <h1>Thalara's Gate Bastion Tracker</h1>
   <div class="sub">V5 tracker with autosave, pressure warning colors, action budget by tier, building health fields, repair progress math, promotion notes, and built-in help tips throughout the repair grid.</div>
+  <div class="sub" style="font-size:13px; margin-top:-8px;">This tracker saves locally in your browser. Use <strong>Export Save</strong> to back up or move your Bastion to another device.</div>
 
-  <div class="toolbar">
+  <div class="toolbar" style="position:sticky; top:0; z-index:100; background:var(--bg); padding:10px 0;">
     <button onclick="saveNow()">Save Now</button>
     <button class="secondary" onclick="window.print()">Print / PDF</button>
     <button class="secondary" onclick="exportData()">Export Save</button>
     <button class="secondary" onclick="document.getElementById('importFile').click()">Import Save</button>
+    <button class="secondary" onclick="resetDefaultNames()">Reset Default Names</button>
     <button class="secondary" onclick="resetTracker()">Reset Tracker</button>
     <input id="importFile" type="file" accept="application/json" style="display:none" />
     <div class="status" id="saveStatus">Autosave ready.</div>
@@ -144,7 +146,7 @@
       <div class="mini4" style="margin-top:12px;">
         <div class="field"><label>Action Budget (Auto) <span class="help" tabindex="0">?<span class="tip"><strong>Action Budget</strong>This fills automatically from the Restoration Tier. Use it as the downtime limit for what the bastion can attempt between adventures.</span></span></label><input data-key="action_budget_auto" readonly></div>
         <div class="field"><label>Pressure Summary</label><input data-key="pressure_summary" readonly></div>
-        <div class="field"><label>Buildings Incomplete</label><input data-key="damaged_count" readonly></div>
+        <div class="field"><label>Structures Not Fully Restored</label><input data-key="damaged_count" readonly></div>
         <div class="field"><label>Promotion Notes</label><input data-key="promotion_notes"></div>
       </div>
     </div>
@@ -193,13 +195,13 @@
         <thead>
           <tr>
             <th>Structure</th>
-            <th>Condition <span class="help" tabindex="0">?<span class="tip"><strong>Condition</strong>Use this as a narrative state label. Good examples are Ruined, Damaged, Stabilized, Operational, or Restored. This is descriptive, not numeric.</span></span></th>
-            <th>Wood <span class="help" tabindex="0">?<span class="tip"><strong>Wood Cost</strong>Enter the full wood requirement to restore this building to the level you want. The tracker uses this with progress % to show what remains.</span></span></th>
-            <th>Stone <span class="help" tabindex="0">?<span class="tip"><strong>Stone Cost</strong>Enter the full stone requirement to restore this building to the level you want. The tracker uses this with progress % to show what remains.</span></span></th>
-            <th>Labor <span class="help" tabindex="0">?<span class="tip"><strong>Labor Cost</strong>Enter the full labor requirement to restore this building. Use it as worker-weeks or whatever labor scale you prefer.</span></span></th>
-            <th>% <span class="help" tabindex="0">?<span class="tip"><strong>Progress %</strong>How far along the structure is toward restoration. 0 means untouched. 100 means finished. Remaining cost is calculated from this number.</span></span></th>
-            <th>Remaining Cost <span class="help" tabindex="0">?<span class="tip"><strong>Remaining Cost</strong>This is calculated automatically from the Wood, Stone, Labor, and Progress values. It tells you what still needs to be spent.</span></span></th>
-            <th>Health / Damage <span class="help" tabindex="0">?<span class="tip"><strong>Health / Damage</strong>Use this for active structural condition during play. Good examples are Healthy, Damaged, Critical, Breached, or Collapsed. This is especially useful during attacks or siege events.</span></span></th>
+            <th>Condition <span class="help" tabindex="0">?<span class="tip"><strong>Condition</strong>Short narrative state such as Ruined, Damaged, Stabilized, Operational, or Restored.</span></span></th>
+            <th>Wood <span class="help" tabindex="0">?<span class="tip"><strong>Wood Cost</strong>Full wood requirement for this structure.</span></span></th>
+            <th>Stone <span class="help" tabindex="0">?<span class="tip"><strong>Stone Cost</strong>Full stone requirement for this structure.</span></span></th>
+            <th>Labor <span class="help" tabindex="0">?<span class="tip"><strong>Labor Cost</strong>Full labor requirement for this structure.</span></span></th>
+            <th>% <span class="help" tabindex="0">?<span class="tip"><strong>Progress %</strong>0 is untouched. 100 is complete.</span></span></th>
+            <th>Remaining Cost <span class="help" tabindex="0">?<span class="tip"><strong>Remaining Cost</strong>Auto-calculated from costs and progress.</span></span></th>
+            <th>Health / Damage <span class="help" tabindex="0">?<span class="tip"><strong>Health / Damage</strong>Use states like Healthy, Damaged, Critical, Breached, or Collapsed.</span></span></th>
           </tr>
         </thead>
         <tbody>
@@ -214,7 +216,7 @@
           <tr><td><input data-key="name_tunnels" value="Under-Bastion Tunnels"></td><td><input data-key="tunnels_condition"></td><td><input type="number" min="0" data-key="tunnels_w"></td><td><input type="number" min="0" data-key="tunnels_s"></td><td><input type="number" min="0" data-key="tunnels_l"></td><td><input type="number" min="0" max="100" data-key="tunnels_progress"></td><td id="tunnels_remaining">—</td><td><input data-key="tunnels_health"></td></tr>
         </tbody>
       </table>
-      <div class="note">Structure names are editable. Set each building's full repair cost in Wood / Stone / Labor. The tracker auto-displays remaining cost based on progress %. Use Health / Damage for narrative structure state or siege tracking.</div>
+      <div class="note">Structure names are editable. Set each building's full repair cost in Wood / Stone / Labor. The tracker auto-displays remaining cost based on progress %. Use Health / Damage for narrative structure state or siege tracking.</div> in Wood / Stone / Labor. The tracker auto-displays remaining cost based on progress %. Use Health / Damage for narrative structure state or siege tracking.</div>
     </div>
 
     <div class="card span-4">
@@ -255,8 +257,9 @@
       <div class="field" style="margin-top:10px;"><label>GM Notes</label><textarea data-key="gm_notes"></textarea></div>
     </div>
   </div>
-</div>
 
+  <div class="sub" style="font-size:12px; margin-top:18px;">Free GM tool. Copy, modify, and reuse for your own campaign.</div>
+</div>
 <script>
 const STORAGE_KEY = 'thalara_bastion_tracker_v5';
 const statusEl = document.getElementById('saveStatus');
@@ -365,8 +368,43 @@ function resetTracker(){
   fields.forEach(f => {
     if (f.tagName === 'SELECT') f.selectedIndex = 0;
     else if (f.dataset.key === 'bastion_name') f.value = "Thalara's Gate";
-    else f.value = '';
+    else if (f.dataset.key && f.dataset.key.startsWith('name_')) {
+      const defaults = {
+        name_rotunda:'Aegis Rotunda',
+        name_courtyard:'Blighted Courtyard & Well',
+        name_tower:'Highwatch Tower',
+        name_gatehouse:'River Gatehouse',
+        name_roost:"Warden's Roost",
+        name_rootvault:'Root Vault',
+        name_shrine:"Thalara's Shrine",
+        name_rampart:'Skyvault Rampart',
+        name_tunnels:'Under-Bastion Tunnels'
+      };
+      f.value = defaults[f.dataset.key] || '';
+    } else f.value = '';
   });
+  updateDerived();
+  statusEl.textContent = 'Tracker reset.';
+}
+function resetDefaultNames(){
+  const defaults = {
+    name_rotunda:'Aegis Rotunda',
+    name_courtyard:'Blighted Courtyard & Well',
+    name_tower:'Highwatch Tower',
+    name_gatehouse:'River Gatehouse',
+    name_roost:"Warden's Roost",
+    name_rootvault:'Root Vault',
+    name_shrine:"Thalara's Shrine",
+    name_rampart:'Skyvault Rampart',
+    name_tunnels:'Under-Bastion Tunnels'
+  };
+  Object.entries(defaults).forEach(([k,v]) => {
+    const el = document.querySelector(`[data-key="${k}"]`);
+    if (el) el.value = v;
+  });
+  saveNow();
+  statusEl.textContent = 'Default structure names restored.';
+});
   updateDerived();
   statusEl.textContent = 'Tracker reset.';
 }
