@@ -217,7 +217,7 @@
           <tr><td><input data-key="name_tunnels" value="Under-Bastion Tunnels"></td><td><input data-key="tunnels_condition"></td><td><input type="number" min="0" data-key="tunnels_w"></td><td><input type="number" min="0" data-key="tunnels_s"></td><td><input type="number" min="0" data-key="tunnels_l"></td><td><input type="number" min="0" max="100" data-key="tunnels_progress"></td><td id="tunnels_remaining">—</td><td><input data-key="tunnels_health"></td></tr>
         </tbody>
       </table>
-      <div class="note">Structure names are editable. Set each building's full repair cost in Wood / Stone / Labor. The tracker auto-displays remaining cost based on progress %. Use Health / Damage for narrative structure state or siege tracking.</div>
+      <div class="note">Structure names are editable. Set each building's full repair cost in Wood / Stone / Labor. The tracker auto-displays remaining cost based on progress %. Use Health / Damage for narrative structure state or siege tracking.</div> in Wood / Stone / Labor. The tracker auto-displays remaining cost based on progress %. Use Health / Damage for narrative structure state or siege tracking.</div>
     </div>
 
     <div class="card span-4">
@@ -262,23 +262,55 @@
   <div class="sub" style="font-size:12px; margin-top:18px;">Free GM tool. Copy, modify, and reuse for your own campaign.</div>
 </div>
 <script>
-const STORAGE_KEY = 'thalara_bastion_tracker_v6';
+const STORAGE_KEY = 'thalara_bastion_tracker_v7';
 const statusEl = document.getElementById('saveStatus');
 const fields = Array.from(document.querySelectorAll('[data-key]'));
 const costRows = ['rotunda','courtyard','tower','gatehouse','roost','rootvault','shrine','rampart','tunnels'];
+const defaultNames = {
+  name_rotunda:'Aegis Rotunda',
+  name_courtyard:'Blighted Courtyard & Well',
+  name_tower:'Highwatch Tower',
+  name_gatehouse:'River Gatehouse',
+  name_roost:"Warden's Roost",
+  name_rootvault:'Root Vault',
+  name_shrine:"Thalara's Shrine",
+  name_rampart:'Skyvault Rampart',
+  name_tunnels:'Under-Bastion Tunnels'
+};
 
 function getData(){
   const data = {};
   fields.forEach(f => data[f.dataset.key] = f.value);
   return data;
 }
+
 function setData(data){
   fields.forEach(f => {
-    if (Object.prototype.hasOwnProperty.call(data, f.dataset.key)) f.value = data[f.dataset.key];
+    if (Object.prototype.hasOwnProperty.call(data, f.dataset.key)) {
+      f.value = data[f.dataset.key];
+    }
   });
 }
-function num(v){ const n = parseFloat(v); return isNaN(n) ? 0 : n; }
-function getVal(key){ const el = document.querySelector(`[data-key="${key}"]`); return el ? el.value : ''; }
+
+function num(v){
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function getField(key){
+  return document.querySelector(`[data-key="${key}"]`);
+}
+
+function getVal(key){
+  const el = getField(key);
+  return el ? el.value : '';
+}
+
+function setVal(key, value){
+  const el = getField(key);
+  if (el) el.value = value;
+}
+
 function pressureClass(value){
   const v = num(value);
   if (v >= 5) return 'pressure-danger';
@@ -286,152 +318,184 @@ function pressureClass(value){
   if (v <= 1) return 'pressure-good';
   return 'pressure-safe';
 }
+
 function actionBudgetForTier(tier){
-  if (tier === 'Tier I') return '1 Bastion Action';
-  if (tier === 'Tier II') return '2 Bastion Actions';
-  if (tier === 'Tier III') return '2 Major or 3 Minor';
-  if (tier === 'Tier IV') return '3 Major or 4 Minor';
-  return '';
+  switch (tier) {
+    case 'Tier I': return '1 Bastion Action';
+    case 'Tier II': return '2 Bastion Actions';
+    case 'Tier III': return '2 Major or 3 Minor';
+    case 'Tier IV': return '3 Major or 4 Minor';
+    default: return '';
+  }
 }
-function updateDerived(){
+
+function updatePressureDisplays(){
   const pt = num(getVal('political_tension'));
   const fa = num(getVal('fey_attention'));
   const bp = num(getVal('blight_pressure'));
   const mt = num(getVal('military_threat'));
 
-  const ptDisplay = document.getElementById('pt_display');
-  const faDisplay = document.getElementById('fa_display');
-  const bpDisplay = document.getElementById('bp_display');
-  const mtDisplay = document.getElementById('mt_display');
-  if (ptDisplay) ptDisplay.textContent = pt;
-  if (faDisplay) faDisplay.textContent = fa;
-  if (bpDisplay) bpDisplay.textContent = bp;
-  if (mtDisplay) mtDisplay.textContent = mt;
+  const displays = {
+    pt_display: pt,
+    fa_display: fa,
+    bp_display: bp,
+    mt_display: mt
+  };
 
-  const ptPill = document.getElementById('pt_pill');
-  const faPill = document.getElementById('fa_pill');
-  const bpPill = document.getElementById('bp_pill');
-  const mtPill = document.getElementById('mt_pill');
-  if (ptPill) ptPill.className = 'pill ' + pressureClass(pt);
-  if (faPill) faPill.className = 'pill ' + pressureClass(fa);
-  if (bpPill) bpPill.className = 'pill ' + pressureClass(bp);
-  if (mtPill) mtPill.className = 'pill ' + pressureClass(mt);
+  Object.entries(displays).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(value);
+  });
+
+  const pills = {
+    pt_pill: pt,
+    fa_pill: fa,
+    bp_pill: bp,
+    mt_pill: mt
+  };
+
+  Object.entries(pills).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'pill ' + pressureClass(value);
+  });
 
   const highest = Math.max(pt, fa, bp, mt);
   let summary = 'Quiet';
   if (highest >= 5) summary = 'Crisis';
   else if (highest >= 4) summary = 'Escalating';
   else if (highest >= 2) summary = 'Active';
-
-  const pressureSummary = document.querySelector('[data-key="pressure_summary"]');
-  const actionBudgetAuto = document.querySelector('[data-key="action_budget_auto"]');
-  const damagedCount = document.querySelector('[data-key="damaged_count"]');
-  const runningCosts = document.querySelector('[data-key="running_costs"]');
-
-  if (pressureSummary) pressureSummary.value = summary;
-  if (actionBudgetAuto) actionBudgetAuto.value = actionBudgetForTier(getVal('restoration_tier'));
-
-  const weeklyWages =
-function saveNow(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
-  updateDerived();
-  statusEl.textContent = 'Saved ' + new Date().toLocaleTimeString();
+  setVal('pressure_summary', summary);
 }
+
+function updateRunningCosts(){
+  const weeklyWages = num(getVal('weekly_wages'));
+  const monthlyMaintenance = num(getVal('monthly_maintenance'));
+  const total = (weeklyWages * 4) + monthlyMaintenance;
+  setVal('running_costs', total);
+}
+
+function updateActionBudget(){
+  setVal('action_budget_auto', actionBudgetForTier(getVal('restoration_tier')));
+}
+
+function updateRepairMath(){
+  let incomplete = 0;
+
+  costRows.forEach(key => {
+    const w = num(getVal(key + '_w'));
+    const s = num(getVal(key + '_s'));
+    const l = num(getVal(key + '_l'));
+    const pRaw = getVal(key + '_progress');
+    const p = Math.max(0, Math.min(100, num(pRaw)));
+
+    const rw = Math.ceil(w * (100 - p) / 100);
+    const rs = Math.ceil(s * (100 - p) / 100);
+    const rl = Math.ceil(l * (100 - p) / 100);
+
+    const cell = document.getElementById(key + '_remaining');
+    if (cell) cell.textContent = `W ${rw} / S ${rs} / L ${rl}`;
+
+    if (p < 100) incomplete += 1;
+  });
+
+  setVal('damaged_count', incomplete);
+}
+
+function updateDerived(){
+  updatePressureDisplays();
+  updateRunningCosts();
+  updateActionBudget();
+  updateRepairMath();
+}
+
+function saveNow(){
+  updateDerived();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+  if (statusEl) statusEl.textContent = 'Saved ' + new Date().toLocaleTimeString();
+}
+
 function loadData(){
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return;
   try {
     setData(JSON.parse(raw));
-    statusEl.textContent = 'Loaded saved tracker.';
+    if (statusEl) statusEl.textContent = 'Loaded saved tracker.';
   } catch {
-    statusEl.textContent = 'Save data could not be loaded.';
+    if (statusEl) statusEl.textContent = 'Save data could not be loaded.';
   }
 }
-let saveTimer;
-fields.forEach(f => {
-  f.addEventListener('input', () => {
-    clearTimeout(saveTimer);
-    updateDerived();
-    statusEl.textContent = 'Editing...';
-    saveTimer = setTimeout(saveNow, 350);
+
+function resetTracker(){
+  if (!confirm('Reset all tracker data?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  fields.forEach(f => {
+    if (f.tagName === 'SELECT') {
+      f.selectedIndex = 0;
+    } else if (f.dataset.key === 'bastion_name') {
+      f.value = "Thalara's Gate";
+    } else if (f.dataset.key && f.dataset.key.startsWith('name_')) {
+      f.value = defaultNames[f.dataset.key] || '';
+    } else {
+      f.value = '';
+    }
   });
-});
+  updateDerived();
+  if (statusEl) statusEl.textContent = 'Tracker reset.';
+}
+
+function resetDefaultNames(){
+  Object.entries(defaultNames).forEach(([key, value]) => setVal(key, value));
+  saveNow();
+  if (statusEl) statusEl.textContent = 'Default structure names restored.';
+}
+
 function exportData(){
-  const blob = new Blob([JSON.stringify(getData(), null, 2)], {type:'application/json'});
+  const blob = new Blob([JSON.stringify(getData(), null, 2)], { type:'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'thalara-bastion-save.json';
   a.click();
   URL.revokeObjectURL(a.href);
 }
-function resetTracker(){
-  if (!confirm('Reset all tracker data?')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  fields.forEach(f => {
-    if (f.tagName === 'SELECT') f.selectedIndex = 0;
-    else if (f.dataset.key === 'bastion_name') f.value = "Thalara's Gate";
-    else if (f.dataset.key && f.dataset.key.startsWith('name_')) {
-      const defaults = {
-        name_rotunda:'Aegis Rotunda',
-        name_courtyard:'Blighted Courtyard & Well',
-        name_tower:'Highwatch Tower',
-        name_gatehouse:'River Gatehouse',
-        name_roost:"Warden's Roost",
-        name_rootvault:'Root Vault',
-        name_shrine:"Thalara's Shrine",
-        name_rampart:'Skyvault Rampart',
-        name_tunnels:'Under-Bastion Tunnels'
-      };
-      f.value = defaults[f.dataset.key] || '';
-    } else f.value = '';
+
+const importFile = document.getElementById('importFile');
+if (importFile) {
+  importFile.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      setData(JSON.parse(text));
+      saveNow();
+      if (statusEl) statusEl.textContent = 'Imported save file.';
+    } catch {
+      alert('Import failed.');
+    }
+    e.target.value = '';
   });
-  updateDerived();
-  statusEl.textContent = 'Tracker reset.';
 }
-function resetDefaultNames(){
-  const defaults = {
-    name_rotunda:'Aegis Rotunda',
-    name_courtyard:'Blighted Courtyard & Well',
-    name_tower:'Highwatch Tower',
-    name_gatehouse:'River Gatehouse',
-    name_roost:"Warden's Roost",
-    name_rootvault:'Root Vault',
-    name_shrine:"Thalara's Shrine",
-    name_rampart:'Skyvault Rampart',
-    name_tunnels:'Under-Bastion Tunnels'
-  };
-  Object.entries(defaults).forEach(([k,v]) => {
-    const el = document.querySelector(`[data-key="${k}"]`);
-    if (el) el.value = v;
+
+let saveTimer;
+fields.forEach(f => {
+  f.addEventListener('input', () => {
+    clearTimeout(saveTimer);
+    updateDerived();
+    if (statusEl) statusEl.textContent = 'Editing...';
+    saveTimer = setTimeout(saveNow, 300);
   });
-  saveNow();
-  statusEl.textContent = 'Default structure names restored.';
 });
-  updateDerived();
-  statusEl.textContent = 'Tracker reset.';
-}
-document.getElementById('importFile').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    const text = await file.text();
-    setData(JSON.parse(text));
-    saveNow();
-    statusEl.textContent = 'Imported save file.';
-  } catch {
-    alert('Import failed.');
-  }
-  e.target.value = '';
-});
+
 document.querySelectorAll('.help').forEach(help => {
   help.addEventListener('click', (e) => {
     e.stopPropagation();
     help.classList.toggle('open');
   });
 });
+
 document.addEventListener('click', () => {
   document.querySelectorAll('.help.open').forEach(h => h.classList.remove('open'));
 });
+
 loadData();
 updateDerived();
 </script>
