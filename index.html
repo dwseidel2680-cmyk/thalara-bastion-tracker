@@ -32,34 +32,25 @@
   h1,h2,h3 { margin:0 0 12px 0; }
   h1 { text-align:center; margin-bottom:6px; }
   .sub { text-align:center; color:var(--muted); margin-bottom:18px; }
-  .toolbar {
-    display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px;
-  }
+  .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px; }
   button {
     border:none; border-radius:8px; padding:10px 14px; font-weight:700; cursor:pointer;
     background:var(--accent); color:#0d1320;
   }
-  button.secondary {
-    background:var(--panel2); color:var(--text); border:1px solid var(--line);
-  }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--line); }
   .status { margin-left:auto; color:var(--muted); font-size:14px; }
   .grid { display:grid; grid-template-columns:repeat(12, 1fr); gap:16px; }
-  .card {
-    background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px;
-  }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; }
   .span-12 { grid-column:span 12; }
   .span-8 { grid-column:span 8; }
   .span-6 { grid-column:span 6; }
   .span-4 { grid-column:span 4; }
-  .span-3 { grid-column:span 3; }
   @media (max-width: 980px) {
-    .span-8, .span-6, .span-4, .span-3 { grid-column:span 12; }
+    .span-8, .span-6, .span-4 { grid-column:span 12; }
     .status { width:100%; margin-left:0; }
   }
   table { width:100%; border-collapse:collapse; margin-top:8px; }
-  th, td {
-    border:1px solid var(--line); padding:8px; text-align:left; vertical-align:top; font-size:14px;
-  }
+  th, td { border:1px solid var(--line); padding:8px; text-align:left; vertical-align:top; font-size:14px; }
   th { background:var(--panel2); }
   input, select, textarea {
     width:100%; background:#11161d; color:var(--text); border:1px solid var(--line);
@@ -69,13 +60,11 @@
   .mini { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
   .mini4 { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; }
   .field label {
-    display:block; color:var(--muted); font-size:12px; font-weight:700; margin-bottom:5px;
+    display:flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; font-weight:700; margin-bottom:5px;
     letter-spacing:.04em; text-transform:uppercase;
   }
   .health { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; }
-  .pill {
-    padding:10px; border-radius:8px; background:var(--panel2); border:1px solid var(--line);
-  }
+  .pill { padding:10px; border-radius:8px; background:var(--panel2); border:1px solid var(--line); }
   .pill .big { font-size:22px; font-weight:700; margin-top:4px; }
   .small { font-size:12px; color:var(--muted); }
   .pressure-safe { background:var(--panel2); }
@@ -83,19 +72,36 @@
   .pressure-danger { background:var(--danger-bg); }
   .pressure-good { background:var(--good-bg); }
   .note { color:var(--muted); font-size:12px; margin-top:8px; }
+  .help {
+    position:relative; display:inline-flex; align-items:center; justify-content:center;
+    width:16px; height:16px; border-radius:50%; border:1px solid var(--line);
+    background:var(--panel2); color:var(--accent); font-size:11px; font-weight:700;
+    cursor:help; user-select:none; flex:0 0 auto;
+  }
+  .help .tip {
+    display:none; position:absolute; left:22px; top:-8px; z-index:1000; width:260px;
+    background:#0f141b; color:var(--text); border:1px solid var(--line); border-radius:8px;
+    padding:10px; text-transform:none; letter-spacing:normal; line-height:1.35; font-weight:400;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .help:hover .tip, .help.open .tip { display:block; }
+  .help .tip strong { display:block; margin-bottom:4px; color:var(--accent); font-size:12px; }
+  @media (max-width: 980px) {
+    .help .tip { left:auto; right:0; top:22px; width:240px; }
+  }
   @media print {
     body { background:#fff; color:#000; padding:8px; }
     .card { background:#fff; border:1px solid #999; }
     th { background:#eee; color:#000; }
     input, select, textarea { color:#000; background:#fff; border:1px solid #999; }
-    .toolbar { display:none; }
+    .toolbar, .help { display:none !important; }
   }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>Thalara's Gate Bastion Tracker</h1>
-  <div class="sub">V3 tracker with autosave, pressure warning colors, action budget by tier, building health fields, repair progress math, and promotion notes.</div>
+  <div class="sub">V4 tracker with autosave, pressure warning colors, action budget by tier, building health fields, repair progress math, promotion notes, and built-in help tips.</div>
 
   <div class="toolbar">
     <button onclick="saveNow()">Save Now</button>
@@ -112,9 +118,9 @@
       <h2>Overview</h2>
       <div class="mini4">
         <div class="field"><label>Bastion Name</label><input data-key="bastion_name" value="Thalara's Gate"></div>
-        <div class="field"><label>Restoration Tier</label><select data-key="restoration_tier"><option>Tier I</option><option>Tier II</option><option>Tier III</option><option>Tier IV</option></select></div>
-        <div class="field"><label>Bastion Influence</label><select data-key="bastion_influence"><option>Unrecognized</option><option>Observed</option><option>Established</option><option>Respected</option><option>Power Broker</option></select></div>
-        <div class="field"><label>Accord Standing (0-6)</label><input type="number" min="0" max="6" data-key="accord_standing"></div>
+        <div class="field"><label>Restoration Tier <span class="help" tabindex="0">?<span class="tip"><strong>Restoration Tier</strong>This is the overall state of the bastion. Tier I is stabilized ruin. Tier II is operational outpost. Tier III is a regional stronghold. Tier IV is a strategic fortress. The tier controls Bastion action budget and what systems can reasonably be active.</span></span></label><select data-key="restoration_tier"><option>Tier I</option><option>Tier II</option><option>Tier III</option><option>Tier IV</option></select></div>
+        <div class="field"><label>Bastion Influence <span class="help" tabindex="0">?<span class="tip"><strong>Bastion Influence</strong>This tracks how much regional weight the bastion carries. Use it to judge how seriously settlements, nobles, and rival powers treat Thalara's Gate. It usually rises through success, visibility, protection, and strategic importance.</span></span></label><select data-key="bastion_influence"><option>Unrecognized</option><option>Observed</option><option>Established</option><option>Respected</option><option>Power Broker</option></select></div>
+        <div class="field"><label>Accord Standing (0-6) <span class="help" tabindex="0">?<span class="tip"><strong>Accord Standing</strong>This measures how well the bastion is complying with the old Accord framework. Low values mean strain, neglect, or abuse. High values mean legitimacy and stability. Use this especially when portal use, shrine rites, or Fey politics matter.</span></span></label><input type="number" min="0" max="6" data-key="accord_standing"></div>
       </div>
 
       <div class="health" style="margin-top:12px;">
@@ -125,18 +131,18 @@
       </div>
 
       <div class="mini4" style="margin-top:12px;">
-        <div class="field"><label>Political Tension (0-5)</label><input type="number" min="0" max="5" data-key="political_tension"></div>
-        <div class="field"><label>Fey Attention (0-5)</label><input type="number" min="0" max="5" data-key="fey_attention"></div>
-        <div class="field"><label>Blight Pressure (0-5)</label><input type="number" min="0" max="5" data-key="blight_pressure"></div>
-        <div class="field"><label>Military Threat (0-5)</label><input type="number" min="0" max="5" data-key="military_threat"></div>
-        <div class="field"><label>Internal Stability (0-5)</label><input type="number" min="0" max="5" data-key="internal_stability"></div>
-        <div class="field"><label>Portal Instability (0-5)</label><input type="number" min="0" max="5" data-key="portal_instability"></div>
+        <div class="field"><label>Political Tension (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Political Tension</strong>Use this for noble suspicion, diplomatic strain, trade disputes, or local unrest caused by the bastion's rise. At 4, prepare a major political complication. At 5, trigger a crisis or confrontation.</span></span></label><input type="number" min="0" max="5" data-key="political_tension"></div>
+        <div class="field"><label>Fey Attention (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Fey Attention</strong>Use this when the portal, shrine, Rotunda, fairy matters, or ancient pacts draw notice from beyond the mortal frontier. High values should create emissaries, interference, demands, or tests.</span></span></label><input type="number" min="0" max="5" data-key="fey_attention"></div>
+        <div class="field"><label>Blight Pressure (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Blight Pressure</strong>Tracks how aggressively corruption is advancing in the region. Increase it when frontier settlements fall behind, roots spread, or the players ignore outbreaks. At high values, use it to trigger creature attacks, contamination, or regional loss.</span></span></label><input type="number" min="0" max="5" data-key="blight_pressure"></div>
+        <div class="field"><label>Military Threat (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Military Threat</strong>Tracks organized danger: raiders, rival nobles, monsters gathering, siege preparation, or enemy scouts. At 4 or 5, begin using siege pressure and defensive consequences.</span></span></label><input type="number" min="0" max="5" data-key="military_threat"></div>
+        <div class="field"><label>Internal Stability (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Internal Stability</strong>Tracks morale and order inside the bastion. Reduce it when wages go unpaid, recruits die, leaders vanish, or staff feel unsafe. Raise it when the bastion succeeds, pays well, protects people, and feels purposeful.</span></span></label><input type="number" min="0" max="5" data-key="internal_stability"></div>
+        <div class="field"><label>Portal Instability (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Portal Instability</strong>Use this for stress on the deeper gate system. Increase it with reckless use, damaged components, bad rituals, or planar surges. At high values, trigger magical mishaps, surges, or dangerous threshold effects.</span></span></label><input type="number" min="0" max="5" data-key="portal_instability"></div>
         <div class="field"><label>Total Staff</label><input type="number" min="0" data-key="total_staff"></div>
         <div class="field"><label>General Bastion Notes</label><input data-key="overview_notes"></div>
       </div>
 
       <div class="mini4" style="margin-top:12px;">
-        <div class="field"><label>Action Budget (Auto)</label><input data-key="action_budget_auto" readonly></div>
+        <div class="field"><label>Action Budget (Auto) <span class="help" tabindex="0">?<span class="tip"><strong>Action Budget</strong>This fills automatically from the Restoration Tier. Use it as the downtime limit for what the bastion can attempt between adventures.</span></span></label><input data-key="action_budget_auto" readonly></div>
         <div class="field"><label>Pressure Summary</label><input data-key="pressure_summary" readonly></div>
         <div class="field"><label>Buildings Incomplete</label><input data-key="damaged_count" readonly></div>
         <div class="field"><label>Promotion Notes</label><input data-key="promotion_notes"></div>
@@ -146,9 +152,9 @@
     <div class="card span-4">
       <h2>Resources</h2>
       <div class="mini">
-        <div class="field"><label>Wood</label><input type="number" min="0" data-key="wood"></div>
-        <div class="field"><label>Stone</label><input type="number" min="0" data-key="stone"></div>
-        <div class="field"><label>Labor</label><input type="number" min="0" data-key="labor"></div>
+        <div class="field"><label>Wood <span class="help" tabindex="0">?<span class="tip"><strong>Wood</strong>Use this for roofs, beams, doors, ladders, scaffolds, barricades, and general structural repair.</span></span></label><input type="number" min="0" data-key="wood"></div>
+        <div class="field"><label>Stone <span class="help" tabindex="0">?<span class="tip"><strong>Stone</strong>Use this for walls, foundations, towers, vaults, and major fortification work.</span></span></label><input type="number" min="0" data-key="stone"></div>
+        <div class="field"><label>Labor <span class="help" tabindex="0">?<span class="tip"><strong>Labor</strong>Use this as your repair workforce. One simple approach: 1 Labor equals 1 worker for 1 week of effort.</span></span></label><input type="number" min="0" data-key="labor"></div>
         <div class="field"><label>Gold</label><input type="number" min="0" data-key="gold"></div>
         <div class="field"><label>Food Stores</label><input data-key="food_stores"></div>
         <div class="field"><label>Weekly Wages (gp)</label><input type="number" min="0" data-key="weekly_wages"></div>
@@ -161,10 +167,10 @@
     <div class="card span-4">
       <h2>Portal & Rotunda</h2>
       <div class="mini">
-        <div class="field"><label>Moon Dragon Scale</label><select data-key="moon_scale"><option>Not Installed</option><option>Installed</option><option>Damaged</option></select></div>
-        <div class="field"><label>Fey Rune Pass</label><select data-key="rune_pass"><option>Not Installed</option><option>Installed</option><option>Removed</option></select></div>
-        <div class="field"><label>Portal Ownership</label><select data-key="portal_ownership"><option>Unclaimed</option><option>Claimed</option><option>Contested</option></select></div>
-        <div class="field"><label>Teleport Circle</label><select data-key="teleport_circle"><option>Inactive</option><option>Restored</option><option>Damaged</option></select></div>
+        <div class="field"><label>Moon Dragon Scale <span class="help" tabindex="0">?<span class="tip"><strong>Moon Dragon Scale</strong>This is the stabilizing component tied to portal control. If it is missing or damaged, raise Portal Instability and treat portal operations as risky.</span></span></label><select data-key="moon_scale"><option>Not Installed</option><option>Installed</option><option>Damaged</option></select></div>
+        <div class="field"><label>Fey Rune Pass <span class="help" tabindex="0">?<span class="tip"><strong>Fey Rune Pass</strong>This is the authorization key or attunement element for controlled threshold use. If removed, portal use should become harder and more politically dangerous.</span></span></label><select data-key="rune_pass"><option>Not Installed</option><option>Installed</option><option>Removed</option></select></div>
+        <div class="field"><label>Portal Ownership <span class="help" tabindex="0">?<span class="tip"><strong>Portal Ownership</strong>Track whether the bastion holds recognized control over the gate. Use Contested if rival powers, Fey claimants, or unknown forces are challenging that control.</span></span></label><select data-key="portal_ownership"><option>Unclaimed</option><option>Claimed</option><option>Contested</option></select></div>
+        <div class="field"><label>Teleport Circle <span class="help" tabindex="0">?<span class="tip"><strong>Teleport Circle</strong>Track the state of the Rotunda's circle. Restored means usable. Damaged means unreliable or offline until repaired.</span></span></label><select data-key="teleport_circle"><option>Inactive</option><option>Restored</option><option>Damaged</option></select></div>
       </div>
       <div class="field" style="margin-top:10px;"><label>Last Surge / Portal Event</label><textarea data-key="portal_notes"></textarea></div>
     </div>
@@ -172,7 +178,7 @@
     <div class="card span-4">
       <h2>Downtime Turn</h2>
       <div class="mini">
-        <div class="field"><label>Downtime Period #</label><input data-key="downtime_period"></div>
+        <div class="field"><label>Downtime Period # <span class="help" tabindex="0">?<span class="tip"><strong>Downtime Period</strong>Advance this each time the party resolves a Bastion turn between adventures. A period can be a week, two weeks, or a month depending on campaign pacing.</span></span></label><input data-key="downtime_period"></div>
         <div class="field"><label>Manual Action Notes</label><input data-key="action_budget" placeholder="Optional GM override"></div>
       </div>
       <div class="field" style="margin-top:10px;"><label>Action 1</label><input data-key="action_1"></div>
@@ -224,7 +230,7 @@
           <tr><td>Tunnel Warden</td><td><input data-key="staff_tunnel"></td><td><input data-key="staff_tunnel_status"></td></tr>
         </tbody>
       </table>
-      <div class="field" style="margin-top:10px;"><label>Promotion Tracker</label><textarea data-key="promotion_tracker" placeholder="Guard -> Veteran -> Sergeant -> Captain&#10;Artisan -> Master Artisan&#10;Researcher -> Arcane Custodian"></textarea></div>
+      <div class="field" style="margin-top:10px;"><label>Promotion Tracker <span class="help" tabindex="0">?<span class="tip"><strong>Promotion Tracker</strong>Use this to note who is eligible to advance. Good simple ladders: Guard to Veteran to Sergeant to Captain. Artisan to Master Artisan. Researcher to Arcane Custodian.</span></span></label><textarea data-key="promotion_tracker" placeholder="Guard -> Veteran -> Sergeant -> Captain&#10;Artisan -> Master Artisan&#10;Researcher -> Arcane Custodian"></textarea></div>
     </div>
 
     <div class="card span-6">
@@ -252,7 +258,7 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'thalara_bastion_tracker_v3';
+const STORAGE_KEY = 'thalara_bastion_tracker_v4';
 const statusEl = document.getElementById('saveStatus');
 const fields = Array.from(document.querySelectorAll('[data-key]'));
 const costRows = ['rotunda','courtyard','tower','gatehouse','roost','rootvault','shrine','rampart','tunnels'];
@@ -262,23 +268,13 @@ function getData(){
   fields.forEach(f => data[f.dataset.key] = f.value);
   return data;
 }
-
 function setData(data){
   fields.forEach(f => {
     if (Object.prototype.hasOwnProperty.call(data, f.dataset.key)) f.value = data[f.dataset.key];
   });
 }
-
-function num(v){
-  const n = parseFloat(v);
-  return isNaN(n) ? 0 : n;
-}
-
-function getVal(key){
-  const el = document.querySelector(`[data-key="${key}"]`);
-  return el ? el.value : '';
-}
-
+function num(v){ const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function getVal(key){ const el = document.querySelector(`[data-key="${key}"]`); return el ? el.value : ''; }
 function pressureClass(value){
   const v = num(value);
   if (v >= 5) return 'pressure-danger';
@@ -286,7 +282,6 @@ function pressureClass(value){
   if (v <= 1) return 'pressure-good';
   return 'pressure-safe';
 }
-
 function actionBudgetForTier(tier){
   if (tier === 'Tier I') return '1 Bastion Action';
   if (tier === 'Tier II') return '2 Bastion Actions';
@@ -294,7 +289,6 @@ function actionBudgetForTier(tier){
   if (tier === 'Tier IV') return '3 Major or 4 Minor';
   return '';
 }
-
 function updateDerived(){
   const pt = num(getVal('political_tension'));
   const fa = num(getVal('fey_attention'));
@@ -305,7 +299,6 @@ function updateDerived(){
   document.getElementById('fa_display').textContent = fa;
   document.getElementById('bp_display').textContent = bp;
   document.getElementById('mt_display').textContent = mt;
-
   document.getElementById('pt_pill').className = 'pill ' + pressureClass(pt);
   document.getElementById('fa_pill').className = 'pill ' + pressureClass(fa);
   document.getElementById('bp_pill').className = 'pill ' + pressureClass(bp);
@@ -334,13 +327,11 @@ function updateDerived(){
   });
   document.querySelector('[data-key="damaged_count"]').value = incomplete;
 }
-
 function saveNow(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
   updateDerived();
   statusEl.textContent = 'Saved ' + new Date().toLocaleTimeString();
 }
-
 function loadData(){
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) return;
@@ -351,7 +342,6 @@ function loadData(){
     statusEl.textContent = 'Save data could not be loaded.';
   }
 }
-
 let saveTimer;
 fields.forEach(f => {
   f.addEventListener('input', () => {
@@ -361,7 +351,6 @@ fields.forEach(f => {
     saveTimer = setTimeout(saveNow, 350);
   });
 });
-
 function exportData(){
   const blob = new Blob([JSON.stringify(getData(), null, 2)], {type:'application/json'});
   const a = document.createElement('a');
@@ -370,7 +359,6 @@ function exportData(){
   a.click();
   URL.revokeObjectURL(a.href);
 }
-
 function resetTracker(){
   if (!confirm('Reset all tracker data?')) return;
   localStorage.removeItem(STORAGE_KEY);
@@ -382,7 +370,6 @@ function resetTracker(){
   updateDerived();
   statusEl.textContent = 'Tracker reset.';
 }
-
 document.getElementById('importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -396,7 +383,15 @@ document.getElementById('importFile').addEventListener('change', async (e) => {
   }
   e.target.value = '';
 });
-
+document.querySelectorAll('.help').forEach(help => {
+  help.addEventListener('click', (e) => {
+    e.stopPropagation();
+    help.classList.toggle('open');
+  });
+});
+document.addEventListener('click', () => {
+  document.querySelectorAll('.help.open').forEach(h => h.classList.remove('open'));
+});
 loadData();
 updateDerived();
 </script>
