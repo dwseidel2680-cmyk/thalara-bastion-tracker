@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thalara's Gate Bastion Tracker</title>
+  <style>
+    :root {
+      --bg: #111827;
+      --panel: #1f2937;
+      --panel-2: #243042;
+      --line: #3b4a63;
+      --text: #f3f4f6;
+      --muted: #cbd5e1;
+      --accent: #8fb3ff;
+      --good: #8ad48a;
+      --warn: #f2c66d;
+      --bad: #ef8c8c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1, h2 {
+      margin: 0 0 12px 0;
+    }
+    h1 { font-size: 28px; }
+    h2 { font-size: 18px; margin-top: 24px; }
+    .sub {
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    button {
+      background: var(--accent);
+      color: #0b1322;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .status {
+      margin-left: auto;
+      color: var(--muted);
+      align-self: center;
+      font-size: 14px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 4px 14px rgba(0,0,0,.18);
+    }
+    .span-12 { grid-column: span 12; }
+    .span-8 { grid-column: span 8; }
+    .span-6 { grid-column: span 6; }
+    .span-4 { grid-column: span 4; }
+    .span-3 { grid-column: span 3; }
+    @media (max-width: 1000px) {
+      .span-8, .span-6, .span-4, .span-3 { grid-column: span 12; }
+      .status { width: 100%; margin-left: 0; }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+    }
+    th {
+      background: var(--panel-2);
+      text-align: left;
+    }
+    input, textarea, select {
+      width: 100%;
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      font: inherit;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    .mini {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .mini3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .pillrow {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+    .pillrow .field { min-width: 0; }
+    .note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .danger { color: var(--bad); }
+    .warn { color: var(--warn); }
+    .good { color: var(--good); }
+    .small { font-size: 12px; color: var(--muted); }
+    @media print {
+      body { background: white; color: black; }
+      .card { border: 1px solid #999; box-shadow: none; background: white; }
+      th { background: #eee; color: black; }
+      input, textarea, select { border: 1px solid #999; color: black; background: white; }
+      .toolbar { display: none; }
+      .wrap { max-width: none; padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Thalara's Gate Bastion Tracker</h1>
+    <div class="sub">Editable single-file tracker for Bastion status, resources, pressure, staff, repairs, and portal conditions. Changes autosave in your browser.</div>
+
+    <div class="toolbar">
+      <button onclick="saveNow()">Save Now</button>
+      <button class="secondary" onclick="window.print()">Print / PDF</button>
+      <button class="secondary" onclick="exportData()">Export Save</button>
+      <button class="secondary" onclick="document.getElementById('importFile').click()">Import Save</button>
+      <button class="secondary" onclick="resetTracker()">Reset Tracker</button>
+      <input id="importFile" type="file" accept="application/json" style="display:none" />
+      <div class="status" id="saveStatus">Autosave ready.</div>
+    </div>
+
+    <div class="grid">
+      <div class="card span-12">
+        <h2>Bastion Overview</h2>
+        <div class="mini3">
+          <div class="field"><label>Bastion Name</label><input data-key="bastion_name" value="Thalara's Gate"></div>
+          <div class="field"><label>Restoration Tier</label><select data-key="restoration_tier"><option>Tier I</option><option>Tier II</option><option>Tier III</option><option>Tier IV</option></select></div>
+          <div class="field"><label>Bastion Influence</label><select data-key="bastion_influence"><option>Unrecognized</option><option>Observed</option><option>Established</option><option>Respected</option><option>Power Broker</option></select></div>
+        </div>
+        <div class="pillrow" style="margin-top:10px;">
+          <div class="field"><label>Political Tension (0-5)</label><input type="number" min="0" max="5" data-key="political_tension"></div>
+          <div class="field"><label>Fey Attention (0-5)</label><input type="number" min="0" max="5" data-key="fey_attention"></div>
+          <div class="field"><label>Blight Pressure (0-5)</label><input type="number" min="0" max="5" data-key="blight_pressure"></div>
+          <div class="field"><label>Military Threat (0-5)</label><input type="number" min="0" max="5" data-key="military_threat"></div>
+          <div class="field"><label>Internal Stability (0-5)</label><input type="number" min="0" max="5" data-key="internal_stability"></div>
+          <div class="field"><label>Portal Instability (0-5)</label><input type="number" min="0" max="5" data-key="portal_instability"></div>
+        </div>
+        <div class="pillrow" style="margin-top:10px; grid-template-columns: repeat(4, 1fr);">
+          <div class="field"><label>Accord Standing (0-6)</label><input type="number" min="0" max="6" data-key="accord_standing"></div>
+          <div class="field"><label>Total Staff</label><input type="number" min="0" data-key="total_staff"></div>
+          <div class="field"><label>Weekly Wages (gp)</label><input type="number" min="0" data-key="weekly_wages"></div>
+          <div class="field"><label>Monthly Maintenance (gp)</label><input type="number" min="0" data-key="monthly_maintenance"></div>
+        </div>
+      </div>
+
+      <div class="card span-4">
+        <h2>Resources</h2>
+        <div class="mini">
+          <div class="field"><label>Wood</label><input type="number" min="0" data-key="wood"></div>
+          <div class="field"><label>Stone</label><input type="number" min="0" data-key="stone"></div>
+          <div class="field"><label>Labor</label><input type="number" min="0" data-key="labor"></div>
+          <div class="field"><label>Gold</label><input type="number" min="0" data-key="gold"></div>
+          <div class="field"><label>Food Stores</label><input data-key="food_stores"></div>
+          <div class="field"><label>Spare Timber</label><input data-key="spare_timber"></div>
+        </div>
+        <div class="note">Use this block for quick material tracking during repairs and downtime.</div>
+      </div>
+
+      <div class="card span-4">
+        <h2>Portal & Gate Status</h2>
+        <div class="mini">
+          <div class="field"><label>Moon Dragon Scale</label><select data-key="moon_scale"><option>Not Installed</option><option>Installed</option><option>Damaged</option></select></div>
+          <div class="field"><label>Fey Rune Pass</label><select data-key="rune_pass"><option>Not Installed</option><option>Installed</option><option>Removed</option></select></div>
+          <div class="field"><label>Portal Ownership</label><select data-key="portal_ownership"><option>Unclaimed</option><option>Claimed</option><option>Contested</option></select></div>
+          <div class="field"><label>Teleport Circle</label><select data-key="teleport_circle"><option>Inactive</option><option>Restored</option><option>Damaged</option></select></div>
+        </div>
+        <div class="field" style="margin-top:10px;"><label>Last Surge / Portal Notes</label><textarea data-key="portal_notes"></textarea></div>
+      </div>
+
+      <div class="card span-4">
+        <h2>Downtime Turn</h2>
+        <div class="mini">
+          <div class="field"><label>Downtime Period #</label><input data-key="downtime_period"></div>
+          <div class="field"><label>Available Action Budget</label><input data-key="action_budget" value=""></div>
+        </div>
+        <div class="field" style="margin-top:10px;"><label>Action 1</label><input data-key="action_1"></div>
+        <div class="field" style="margin-top:10px;"><label>Action 2</label><input data-key="action_2"></div>
+        <div class="field" style="margin-top:10px;"><label>Action 3</label><input data-key="action_3"></div>
+        <div class="field" style="margin-top:10px;"><label>Outcome Notes</label><textarea data-key="downtime_outcome"></textarea></div>
+      </div>
+
+      <div class="card span-8">
+        <h2>Building Repair Tracker</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Structure</th>
+              <th>Condition</th>
+              <th>Wood</th>
+              <th>Stone</th>
+              <th>Labor</th>
+              <th>Progress</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Aegis Rotunda</td><td><input data-key="rotunda_condition"></td><td><input data-key="rotunda_w"></td><td><input data-key="rotunda_s"></td><td><input data-key="rotunda_l"></td><td><input data-key="rotunda_progress"></td><td><input data-key="rotunda_notes"></td></tr>
+            <tr><td>Blighted Courtyard & Well</td><td><input data-key="courtyard_condition"></td><td><input data-key="courtyard_w"></td><td><input data-key="courtyard_s"></td><td><input data-key="courtyard_l"></td><td><input data-key="courtyard_progress"></td><td><input data-key="courtyard_notes"></td></tr>
+            <tr><td>Highwatch Tower</td><td><input data-key="tower_condition"></td><td><input data-key="tower_w"></td><td><input data-key="tower_s"></td><td><input data-key="tower_l"></td><td><input data-key="tower_progress"></td><td><input data-key="tower_notes"></td></tr>
+            <tr><td>River Gatehouse</td><td><input data-key="gatehouse_condition"></td><td><input data-key="gatehouse_w"></td><td><input data-key="gatehouse_s"></td><td><input data-key="gatehouse_l"></td><td><input data-key="gatehouse_progress"></td><td><input data-key="gatehouse_notes"></td></tr>
+            <tr><td>Warden's Roost</td><td><input data-key="roost_condition"></td><td><input data-key="roost_w"></td><td><input data-key="roost_s"></td><td><input data-key="roost_l"></td><td><input data-key="roost_progress"></td><td><input data-key="roost_notes"></td></tr>
+            <tr><td>Root Vault</td><td><input data-key="rootvault_condition"></td><td><input data-key="rootvault_w"></td><td><input data-key="rootvault_s"></td><td><input data-key="rootvault_l"></td><td><input data-key="rootvault_progress"></td><td><input data-key="rootvault_notes"></td></tr>
+            <tr><td>Thalara's Shrine</td><td><input data-key="shrine_condition"></td><td><input data-key="shrine_w"></td><td><input data-key="shrine_s"></td><td><input data-key="shrine_l"></td><td><input data-key="shrine_progress"></td><td><input data-key="shrine_notes"></td></tr>
+            <tr><td>Skyvault Rampart</td><td><input data-key="rampart_condition"></td><td><input data-key="rampart_w"></td><td><input data-key="rampart_s"></td><td><input data-key="rampart_l"></td><td><input data-key="rampart_progress"></td><td><input data-key="rampart_notes"></td></tr>
+            <tr><td>Under-Bastion Tunnels</td><td><input data-key="tunnels_condition"></td><td><input data-key="tunnels_w"></td><td><input data-key="tunnels_s"></td><td><input data-key="tunnels_l"></td><td><input data-key="tunnels_progress"></td><td><input data-key="tunnels_notes"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card span-4">
+        <h2>Staff & Officers</h2>
+        <table>
+          <thead><tr><th>Role</th><th>Name</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Steward</td><td><input data-key="staff_steward"></td><td><input data-key="staff_steward_status"></td></tr>
+            <tr><td>Captain of the Guard</td><td><input data-key="staff_captain"></td><td><input data-key="staff_captain_status"></td></tr>
+            <tr><td>Master Artisan</td><td><input data-key="staff_artisan"></td><td><input data-key="staff_artisan_status"></td></tr>
+            <tr><td>Arcane Custodian</td><td><input data-key="staff_arcane"></td><td><input data-key="staff_arcane_status"></td></tr>
+            <tr><td>Shrine Keeper</td><td><input data-key="staff_shrine"></td><td><input data-key="staff_shrine_status"></td></tr>
+            <tr><td>Tunnel Warden</td><td><input data-key="staff_tunnel"></td><td><input data-key="staff_tunnel_status"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card span-6">
+        <h2>Faction Reputation</h2>
+        <table>
+          <thead><tr><th>Faction</th><th>Rep (0-5)</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td>Pinebrook</td><td><input data-key="rep_pinebrook"></td><td><input data-key="rep_pinebrook_notes"></td></tr>
+            <tr><td>Brackenreach</td><td><input data-key="rep_brackenreach"></td><td><input data-key="rep_brackenreach_notes"></td></tr>
+            <tr><td>Harrowbend</td><td><input data-key="rep_harrowbend"></td><td><input data-key="rep_harrowbend_notes"></td></tr>
+            <tr><td>Ironroot</td><td><input data-key="rep_ironroot"></td><td><input data-key="rep_ironroot_notes"></td></tr>
+            <tr><td>Silvermeadow</td><td><input data-key="rep_silvermeadow"></td><td><input data-key="rep_silvermeadow_notes"></td></tr>
+            <tr><td>Fey Courts</td><td><input data-key="rep_fey"></td><td><input data-key="rep_fey_notes"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card span-6">
+        <h2>Threats & Session Notes</h2>
+        <div class="field"><label>Current Threats</label><textarea data-key="current_threats"></textarea></div>
+        <div class="field" style="margin-top:10px;"><label>Recent Events</label><textarea data-key="recent_events"></textarea></div>
+        <div class="field" style="margin-top:10px;"><label>GM Notes</label><textarea data-key="gm_notes"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'thalara_bastion_tracker_v1';
+    const statusEl = document.getElementById('saveStatus');
+    const fields = Array.from(document.querySelectorAll('[data-key]'));
+
+    function getData() {
+      const data = {};
+      fields.forEach(f => data[f.dataset.key] = f.value);
+      return data;
+    }
+
+    function setData(data) {
+      fields.forEach(f => {
+        if (Object.prototype.hasOwnProperty.call(data, f.dataset.key)) {
+          f.value = data[f.dataset.key];
+        }
+      });
+    }
+
+    function saveNow() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
+      const t = new Date().toLocaleTimeString();
+      statusEl.textContent = 'Saved ' + t;
+    }
+
+    function loadData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      try {
+        setData(JSON.parse(raw));
+        statusEl.textContent = 'Loaded saved tracker.';
+      } catch {
+        statusEl.textContent = 'Save data found but could not be loaded.';
+      }
+    }
+
+    let saveTimer;
+    fields.forEach(f => {
+      f.addEventListener('input', () => {
+        clearTimeout(saveTimer);
+        statusEl.textContent = 'Editing...';
+        saveTimer = setTimeout(saveNow, 400);
+      });
+    });
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(getData(), null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'thalara-bastion-tracker-save.json';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function resetTracker() {
+      if (!confirm('Reset all tracker data? This clears the browser save for this page.')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      fields.forEach(f => {
+        if (f.tagName === 'SELECT') f.selectedIndex = 0;
+        else if (f.dataset.key === 'bastion_name') f.value = "Thalara's Gate";
+        else f.value = '';
+      });
+      statusEl.textContent = 'Tracker reset.';
+    }
+
+    document.getElementById('importFile').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        setData(data);
+        saveNow();
+        statusEl.textContent = 'Imported save file.';
+      } catch {
+        alert('That file could not be imported.');
+      }
+      e.target.value = '';
+    });
+
+    loadData();
+  </script>
+</body>
+</html>
