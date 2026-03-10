@@ -101,7 +101,7 @@
 <body>
 <div class="container">
   <h1>Thalara's Gate Bastion Tracker</h1>
-  <div class="sub">V4 tracker with autosave, pressure warning colors, action budget by tier, building health fields, repair progress math, promotion notes, and built-in help tips.</div>
+  <div class="sub">V5 tracker with autosave, pressure warning colors, action budget by tier, building health fields, repair progress math, promotion notes, and built-in help tips throughout the repair grid.</div>
 
   <div class="toolbar">
     <button onclick="saveNow()">Save Now</button>
@@ -193,13 +193,13 @@
         <thead>
           <tr>
             <th>Structure</th>
-            <th>Condition</th>
-            <th>Wood</th>
-            <th>Stone</th>
-            <th>Labor</th>
-            <th>%</th>
-            <th>Remaining Cost</th>
-            <th>Health / Damage</th>
+            <th>Condition <span class="help" tabindex="0">?<span class="tip"><strong>Condition</strong>Use this as a narrative state label. Good examples are Ruined, Damaged, Stabilized, Operational, or Restored. This is descriptive, not numeric.</span></span></th>
+            <th>Wood <span class="help" tabindex="0">?<span class="tip"><strong>Wood Cost</strong>Enter the full wood requirement to restore this building to the level you want. The tracker uses this with progress % to show what remains.</span></span></th>
+            <th>Stone <span class="help" tabindex="0">?<span class="tip"><strong>Stone Cost</strong>Enter the full stone requirement to restore this building to the level you want. The tracker uses this with progress % to show what remains.</span></span></th>
+            <th>Labor <span class="help" tabindex="0">?<span class="tip"><strong>Labor Cost</strong>Enter the full labor requirement to restore this building. Use it as worker-weeks or whatever labor scale you prefer.</span></span></th>
+            <th>% <span class="help" tabindex="0">?<span class="tip"><strong>Progress %</strong>How far along the structure is toward restoration. 0 means untouched. 100 means finished. Remaining cost is calculated from this number.</span></span></th>
+            <th>Remaining Cost <span class="help" tabindex="0">?<span class="tip"><strong>Remaining Cost</strong>This is calculated automatically from the Wood, Stone, Labor, and Progress values. It tells you what still needs to be spent.</span></span></th>
+            <th>Health / Damage <span class="help" tabindex="0">?<span class="tip"><strong>Health / Damage</strong>Use this for active structural condition during play. Good examples are Healthy, Damaged, Critical, Breached, or Collapsed. This is especially useful during attacks or siege events.</span></span></th>
           </tr>
         </thead>
         <tbody>
@@ -258,7 +258,7 @@
 </div>
 
 <script>
-const STORAGE_KEY = 'thalara_bastion_tracker_v4';
+const STORAGE_KEY = 'thalara_bastion_tracker_v5';
 const statusEl = document.getElementById('saveStatus');
 const fields = Array.from(document.querySelectorAll('[data-key]'));
 const costRows = ['rotunda','courtyard','tower','gatehouse','roost','rootvault','shrine','rampart','tunnels'];
