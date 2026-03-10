@@ -161,6 +161,7 @@
         <div class="field"><label>Food Stores</label><input data-key="food_stores"></div>
         <div class="field"><label>Weekly Wages (gp)</label><input type="number" min="0" data-key="weekly_wages"></div>
         <div class="field"><label>Monthly Maintenance (gp)</label><input type="number" min="0" data-key="monthly_maintenance"></div>
+        <div class="field"><label>Total Running Costs (gp) <span class="help" tabindex="0">?<span class="tip"><strong>Total Running Costs</strong>This is auto-calculated as 4 weeks of wages plus monthly maintenance. Use it as the baseline cost to keep the bastion operating for one month.</span></span></label><input type="number" min="0" data-key="running_costs" readonly></div>
         <div class="field"><label>Resource Notes</label><input data-key="resource_notes"></div>
       </div>
       <div class="note">Use Wood, Stone, and Labor as the main repair economy. Gold covers wages, contracts, and special components.</div>
@@ -261,7 +262,7 @@
   <div class="sub" style="font-size:12px; margin-top:18px;">Free GM tool. Copy, modify, and reuse for your own campaign.</div>
 </div>
 <script>
-const STORAGE_KEY = 'thalara_bastion_tracker_v5';
+const STORAGE_KEY = 'thalara_bastion_tracker_v6';
 const statusEl = document.getElementById('saveStatus');
 const fields = Array.from(document.querySelectorAll('[data-key]'));
 const costRows = ['rotunda','courtyard','tower','gatehouse','roost','rootvault','shrine','rampart','tunnels'];
@@ -298,38 +299,39 @@ function updateDerived(){
   const bp = num(getVal('blight_pressure'));
   const mt = num(getVal('military_threat'));
 
-  document.getElementById('pt_display').textContent = pt;
-  document.getElementById('fa_display').textContent = fa;
-  document.getElementById('bp_display').textContent = bp;
-  document.getElementById('mt_display').textContent = mt;
-  document.getElementById('pt_pill').className = 'pill ' + pressureClass(pt);
-  document.getElementById('fa_pill').className = 'pill ' + pressureClass(fa);
-  document.getElementById('bp_pill').className = 'pill ' + pressureClass(bp);
-  document.getElementById('mt_pill').className = 'pill ' + pressureClass(mt);
+  const ptDisplay = document.getElementById('pt_display');
+  const faDisplay = document.getElementById('fa_display');
+  const bpDisplay = document.getElementById('bp_display');
+  const mtDisplay = document.getElementById('mt_display');
+  if (ptDisplay) ptDisplay.textContent = pt;
+  if (faDisplay) faDisplay.textContent = fa;
+  if (bpDisplay) bpDisplay.textContent = bp;
+  if (mtDisplay) mtDisplay.textContent = mt;
+
+  const ptPill = document.getElementById('pt_pill');
+  const faPill = document.getElementById('fa_pill');
+  const bpPill = document.getElementById('bp_pill');
+  const mtPill = document.getElementById('mt_pill');
+  if (ptPill) ptPill.className = 'pill ' + pressureClass(pt);
+  if (faPill) faPill.className = 'pill ' + pressureClass(fa);
+  if (bpPill) bpPill.className = 'pill ' + pressureClass(bp);
+  if (mtPill) mtPill.className = 'pill ' + pressureClass(mt);
 
   const highest = Math.max(pt, fa, bp, mt);
   let summary = 'Quiet';
   if (highest >= 5) summary = 'Crisis';
   else if (highest >= 4) summary = 'Escalating';
   else if (highest >= 2) summary = 'Active';
-  document.querySelector('[data-key="pressure_summary"]').value = summary;
-  document.querySelector('[data-key="action_budget_auto"]').value = actionBudgetForTier(getVal('restoration_tier'));
 
-  let incomplete = 0;
-  costRows.forEach(key => {
-    const w = num(getVal(key + '_w'));
-    const s = num(getVal(key + '_s'));
-    const l = num(getVal(key + '_l'));
-    const p = Math.max(0, Math.min(100, num(getVal(key + '_progress'))));
-    const rw = Math.ceil(w * (100 - p) / 100);
-    const rs = Math.ceil(s * (100 - p) / 100);
-    const rl = Math.ceil(l * (100 - p) / 100);
-    const cell = document.getElementById(key + '_remaining');
-    if (cell) cell.textContent = `W ${rw} / S ${rs} / L ${rl}`;
-    if (p < 100) incomplete++;
-  });
-  document.querySelector('[data-key="damaged_count"]').value = incomplete;
-}
+  const pressureSummary = document.querySelector('[data-key="pressure_summary"]');
+  const actionBudgetAuto = document.querySelector('[data-key="action_budget_auto"]');
+  const damagedCount = document.querySelector('[data-key="damaged_count"]');
+  const runningCosts = document.querySelector('[data-key="running_costs"]');
+
+  if (pressureSummary) pressureSummary.value = summary;
+  if (actionBudgetAuto) actionBudgetAuto.value = actionBudgetForTier(getVal('restoration_tier'));
+
+  const weeklyWages =
 function saveNow(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(getData()));
   updateDerived();
