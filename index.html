@@ -45,8 +45,10 @@
   .span-8 { grid-column:span 8; }
   .span-6 { grid-column:span 6; }
   .span-4 { grid-column:span 4; }
+  .span-3 { grid-column:span 3; }
+  .span-2 { grid-column:span 2; }
   @media (max-width: 980px) {
-    .span-8, .span-6, .span-4 { grid-column:span 12; }
+    .span-8, .span-6, .span-4, .span-3, .span-2 { grid-column:span 12; }
     .status { width:100%; margin-left:0; }
   }
   table { width:100%; border-collapse:collapse; margin-top:8px; }
@@ -58,6 +60,7 @@
   }
   textarea { min-height:72px; resize:vertical; }
   .mini { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; }
+  .mini3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
   .mini4 { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; }
   .field label {
     display:flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; font-weight:700; margin-bottom:5px;
@@ -86,7 +89,14 @@
   }
   .help:hover .tip, .help.open .tip { display:block; }
   .help .tip strong { display:block; margin-bottom:4px; color:var(--accent); font-size:12px; }
+  .engine-grid { display:grid; grid-template-columns: 2fr 2fr 1fr 1fr 1fr 1fr 1fr; gap:10px; }
+  .history-log {
+    background:#11161d; border:1px solid var(--line); border-radius:8px; padding:10px;
+    min-height:120px; white-space:pre-wrap; line-height:1.4;
+  }
+  .engine-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
   @media (max-width: 980px) {
+    .engine-grid { grid-template-columns: 1fr; }
     .help .tip { left:auto; right:0; top:22px; width:240px; }
   }
   @media print {
@@ -94,14 +104,14 @@
     .card { background:#fff; border:1px solid #999; }
     th { background:#eee; color:#000; }
     input, select, textarea { color:#000; background:#fff; border:1px solid #999; }
-    .toolbar, .help { display:none !important; }
+    .toolbar, .help, .engine-actions button { display:none !important; }
   }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>Thalara's Gate Bastion Tracker</h1>
-  <div class="sub">V5 tracker with autosave, pressure warning colors, action budget by tier, building health fields, repair progress math, promotion notes, and built-in help tips throughout the repair grid.</div>
+  <div class="sub">V6 tracker with autosave, pressure warning colors, action budget by tier, building repair math, editable structure names, built-in help tips, and a downtime action engine.</div>
   <div class="sub" style="font-size:13px; margin-top:-8px;">This tracker saves locally in your browser. Use <strong>Export Save</strong> to back up or move your Bastion to another device.</div>
 
   <div class="toolbar" style="position:sticky; top:0; z-index:100; background:var(--bg); padding:10px 0;">
@@ -121,8 +131,8 @@
       <div class="mini4">
         <div class="field"><label>Bastion Name</label><input data-key="bastion_name" value="Thalara's Gate"></div>
         <div class="field"><label>Restoration Tier <span class="help" tabindex="0">?<span class="tip"><strong>Restoration Tier</strong>This is the overall state of the bastion. Tier I is stabilized ruin. Tier II is operational outpost. Tier III is a regional stronghold. Tier IV is a strategic fortress. The tier controls Bastion action budget and what systems can reasonably be active.</span></span></label><select data-key="restoration_tier"><option>Tier I</option><option>Tier II</option><option>Tier III</option><option>Tier IV</option></select></div>
-        <div class="field"><label>Bastion Influence <span class="help" tabindex="0">?<span class="tip"><strong>Bastion Influence</strong>This tracks how much regional weight the bastion carries. Use it to judge how seriously settlements, nobles, and rival powers treat Thalara's Gate. It usually rises through success, visibility, protection, and strategic importance.</span></span></label><select data-key="bastion_influence"><option>Unrecognized</option><option>Observed</option><option>Established</option><option>Respected</option><option>Power Broker</option></select></div>
-        <div class="field"><label>Accord Standing (0-6) <span class="help" tabindex="0">?<span class="tip"><strong>Accord Standing</strong>This measures how well the bastion is complying with the old Accord framework. Low values mean strain, neglect, or abuse. High values mean legitimacy and stability. Use this especially when portal use, shrine rites, or Fey politics matter.</span></span></label><input type="number" min="0" max="6" data-key="accord_standing"></div>
+        <div class="field"><label>Bastion Influence <span class="help" tabindex="0">?<span class="tip"><strong>Bastion Influence</strong>This tracks how much regional weight the bastion carries. Use it to judge how seriously settlements, nobles, and rival powers treat Thalara's Gate.</span></span></label><select data-key="bastion_influence"><option>Unrecognized</option><option>Observed</option><option>Established</option><option>Respected</option><option>Power Broker</option></select></div>
+        <div class="field"><label>Accord Standing (0-6) <span class="help" tabindex="0">?<span class="tip"><strong>Accord Standing</strong>This measures how well the bastion is complying with the old Accord framework. Low values mean strain, neglect, or abuse. High values mean legitimacy and stability.</span></span></label><input type="number" min="0" max="6" data-key="accord_standing"></div>
       </div>
 
       <div class="health" style="margin-top:12px;">
@@ -133,12 +143,12 @@
       </div>
 
       <div class="mini4" style="margin-top:12px;">
-        <div class="field"><label>Political Tension (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Political Tension</strong>Use this for noble suspicion, diplomatic strain, trade disputes, or local unrest caused by the bastion's rise. At 4, prepare a major political complication. At 5, trigger a crisis or confrontation.</span></span></label><input type="number" min="0" max="5" data-key="political_tension"></div>
-        <div class="field"><label>Fey Attention (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Fey Attention</strong>Use this when the portal, shrine, Rotunda, fairy matters, or ancient pacts draw notice from beyond the mortal frontier. High values should create emissaries, interference, demands, or tests.</span></span></label><input type="number" min="0" max="5" data-key="fey_attention"></div>
-        <div class="field"><label>Blight Pressure (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Blight Pressure</strong>Tracks how aggressively corruption is advancing in the region. Increase it when frontier settlements fall behind, roots spread, or the players ignore outbreaks. At high values, use it to trigger creature attacks, contamination, or regional loss.</span></span></label><input type="number" min="0" max="5" data-key="blight_pressure"></div>
-        <div class="field"><label>Military Threat (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Military Threat</strong>Tracks organized danger: raiders, rival nobles, monsters gathering, siege preparation, or enemy scouts. At 4 or 5, begin using siege pressure and defensive consequences.</span></span></label><input type="number" min="0" max="5" data-key="military_threat"></div>
-        <div class="field"><label>Internal Stability (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Internal Stability</strong>Tracks morale and order inside the bastion. Reduce it when wages go unpaid, recruits die, leaders vanish, or staff feel unsafe. Raise it when the bastion succeeds, pays well, protects people, and feels purposeful.</span></span></label><input type="number" min="0" max="5" data-key="internal_stability"></div>
-        <div class="field"><label>Portal Instability (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Portal Instability</strong>Use this for stress on the deeper gate system. Increase it with reckless use, damaged components, bad rituals, or planar surges. At high values, trigger magical mishaps, surges, or dangerous threshold effects.</span></span></label><input type="number" min="0" max="5" data-key="portal_instability"></div>
+        <div class="field"><label>Political Tension (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Political Tension</strong>Use this for noble suspicion, diplomatic strain, trade disputes, or local unrest caused by the bastion's rise.</span></span></label><input type="number" min="0" max="5" data-key="political_tension"></div>
+        <div class="field"><label>Fey Attention (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Fey Attention</strong>Use this when the portal, shrine, Rotunda, fairy matters, or ancient pacts draw notice.</span></span></label><input type="number" min="0" max="5" data-key="fey_attention"></div>
+        <div class="field"><label>Blight Pressure (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Blight Pressure</strong>Tracks how aggressively corruption is advancing in the region.</span></span></label><input type="number" min="0" max="5" data-key="blight_pressure"></div>
+        <div class="field"><label>Military Threat (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Military Threat</strong>Tracks organized danger: raiders, rival nobles, monsters gathering, or siege preparation.</span></span></label><input type="number" min="0" max="5" data-key="military_threat"></div>
+        <div class="field"><label>Internal Stability (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Internal Stability</strong>Tracks morale and order inside the bastion.</span></span></label><input type="number" min="0" max="5" data-key="internal_stability"></div>
+        <div class="field"><label>Portal Instability (0-5) <span class="help" tabindex="0">?<span class="tip"><strong>Portal Instability</strong>Use this for stress on the deeper gate system.</span></span></label><input type="number" min="0" max="5" data-key="portal_instability"></div>
         <div class="field"><label>Total Staff</label><input type="number" min="0" data-key="total_staff"></div>
         <div class="field"><label>General Bastion Notes</label><input data-key="overview_notes"></div>
       </div>
@@ -161,8 +171,7 @@
         <div class="field"><label>Food Stores</label><input data-key="food_stores"></div>
         <div class="field"><label>Weekly Wages (gp)</label><input type="number" min="0" data-key="weekly_wages"></div>
         <div class="field"><label>Monthly Maintenance (gp)</label><input type="number" min="0" data-key="monthly_maintenance"></div>
-        <div class="field"><label>Total Running Costs (gp) <span class="help" tabindex="0">?<span class="tip"><strong>Total Running Costs</strong>This is auto-calculated as 4 weeks of wages plus monthly maintenance. Use it as the baseline cost to keep the bastion operating for one month.</span></span></label><input type="number" min="0" data-key="running_costs" readonly></div>
-        <div class="field"><label>Resource Notes</label><input data-key="resource_notes"></div>
+        <div class="field"><label>Total Running Costs (gp) <span class="help" tabindex="0">?<span class="tip"><strong>Total Running Costs</strong>This is auto-calculated as 4 weeks of wages plus monthly maintenance.</span></span></label><input type="number" min="0" data-key="running_costs" readonly></div>
       </div>
       <div class="note">Use Wood, Stone, and Labor as the main repair economy. Gold covers wages, contracts, and special components.</div>
     </div>
@@ -170,10 +179,10 @@
     <div class="card span-4">
       <h2>Portal & Rotunda</h2>
       <div class="mini">
-        <div class="field"><label>Moon Dragon Scale <span class="help" tabindex="0">?<span class="tip"><strong>Moon Dragon Scale</strong>This is the stabilizing component tied to portal control. If it is missing or damaged, raise Portal Instability and treat portal operations as risky.</span></span></label><select data-key="moon_scale"><option>Not Installed</option><option>Installed</option><option>Damaged</option></select></div>
-        <div class="field"><label>Fey Rune Pass <span class="help" tabindex="0">?<span class="tip"><strong>Fey Rune Pass</strong>This is the authorization key or attunement element for controlled threshold use. If removed, portal use should become harder and more politically dangerous.</span></span></label><select data-key="rune_pass"><option>Not Installed</option><option>Installed</option><option>Removed</option></select></div>
-        <div class="field"><label>Portal Ownership <span class="help" tabindex="0">?<span class="tip"><strong>Portal Ownership</strong>Track whether the bastion holds recognized control over the gate. Use Contested if rival powers, Fey claimants, or unknown forces are challenging that control.</span></span></label><select data-key="portal_ownership"><option>Unclaimed</option><option>Claimed</option><option>Contested</option></select></div>
-        <div class="field"><label>Teleport Circle <span class="help" tabindex="0">?<span class="tip"><strong>Teleport Circle</strong>Track the state of the Rotunda's circle. Restored means usable. Damaged means unreliable or offline until repaired.</span></span></label><select data-key="teleport_circle"><option>Inactive</option><option>Restored</option><option>Damaged</option></select></div>
+        <div class="field"><label>Moon Dragon Scale <span class="help" tabindex="0">?<span class="tip"><strong>Moon Dragon Scale</strong>This is the stabilizing component tied to portal control. If it is missing or damaged, raise Portal Instability.</span></span></label><select data-key="moon_scale"><option>Not Installed</option><option>Installed</option><option>Damaged</option></select></div>
+        <div class="field"><label>Fey Rune Pass <span class="help" tabindex="0">?<span class="tip"><strong>Fey Rune Pass</strong>This is the authorization key or attunement element for controlled threshold use.</span></span></label><select data-key="rune_pass"><option>Not Installed</option><option>Installed</option><option>Removed</option></select></div>
+        <div class="field"><label>Portal Ownership <span class="help" tabindex="0">?<span class="tip"><strong>Portal Ownership</strong>Track whether the bastion holds recognized control over the gate.</span></span></label><select data-key="portal_ownership"><option>Unclaimed</option><option>Claimed</option><option>Contested</option></select></div>
+        <div class="field"><label>Teleport Circle <span class="help" tabindex="0">?<span class="tip"><strong>Teleport Circle</strong>Track the state of the Rotunda's circle.</span></span></label><select data-key="teleport_circle"><option>Inactive</option><option>Restored</option><option>Damaged</option></select></div>
       </div>
       <div class="field" style="margin-top:10px;"><label>Last Surge / Portal Event</label><textarea data-key="portal_notes"></textarea></div>
     </div>
@@ -181,7 +190,7 @@
     <div class="card span-4">
       <h2>Downtime Turn</h2>
       <div class="mini">
-        <div class="field"><label>Downtime Period # <span class="help" tabindex="0">?<span class="tip"><strong>Downtime Period</strong>Advance this each time the party resolves a Bastion turn between adventures. A period can be a week, two weeks, or a month depending on campaign pacing.</span></span></label><input data-key="downtime_period"></div>
+        <div class="field"><label>Downtime Period # <span class="help" tabindex="0">?<span class="tip"><strong>Downtime Period</strong>Advance this each time the party resolves a Bastion turn between adventures.</span></span></label><input data-key="downtime_period"></div>
         <div class="field"><label>Manual Action Notes</label><input data-key="action_budget" placeholder="Optional GM override"></div>
       </div>
       <div class="field" style="margin-top:10px;"><label>Action 1</label><input data-key="action_1"></div>
@@ -190,34 +199,40 @@
       <div class="field" style="margin-top:10px;"><label>Outcome Notes</label><textarea data-key="downtime_outcome"></textarea></div>
     </div>
 
-    <div class="card span-8">
+    <div class="card span-12">
       <h2>Building Repair Tracker</h2>
       <table>
         <thead>
           <tr>
-            <th>Structure</th>
-            <th>Condition <span class="help" tabindex="0">?<span class="tip"><strong>Condition</strong>Short narrative state such as Ruined, Damaged, Stabilized, Operational, or Restored.</span></span></th>
-            <th>Wood <span class="help" tabindex="0">?<span class="tip"><strong>Wood Cost</strong>Full wood requirement for this structure.</span></span></th>
-            <th>Stone <span class="help" tabindex="0">?<span class="tip"><strong>Stone Cost</strong>Full stone requirement for this structure.</span></span></th>
-            <th>Labor <span class="help" tabindex="0">?<span class="tip"><strong>Labor Cost</strong>Full labor requirement for this structure.</span></span></th>
-            <th>% <span class="help" tabindex="0">?<span class="tip"><strong>Progress %</strong>0 is untouched. 100 is complete.</span></span></th>
-            <th>Remaining Cost <span class="help" tabindex="0">?<span class="tip"><strong>Remaining Cost</strong>Auto-calculated from costs and progress.</span></span></th>
-            <th>Health / Damage <span class="help" tabindex="0">?<span class="tip"><strong>Health / Damage</strong>Use states like Healthy, Damaged, Critical, Breached, or Collapsed.</span></span></th>
+            <th rowspan="2">Structure</th>
+            <th rowspan="2">Condition <span class="help" tabindex="0">?<span class="tip"><strong>Condition</strong>Short narrative state such as Ruined, Damaged, Stabilized, Operational, or Restored.</span></span></th>
+            <th colspan="3">Cost</th>
+            <th colspan="3">Contributed</th>
+            <th rowspan="2">Remaining <span class="help" tabindex="0">?<span class="tip"><strong>Remaining</strong>Auto-calculated from costs and contributed values. Displayed as W / S / L.</span></span></th>
+            <th rowspan="2">Health / Damage <span class="help" tabindex="0">?<span class="tip"><strong>Health / Damage</strong>Use states like Healthy, Damaged, Critical, Breached, or Collapsed.</span></span></th>
+          </tr>
+          <tr>
+            <th>Wood</th>
+            <th>Stone</th>
+            <th>Labor</th>
+            <th>Wood</th>
+            <th>Stone</th>
+            <th>Labor</th>
           </tr>
         </thead>
         <tbody>
-          <tr><td><input data-key="name_rotunda" value="Aegis Rotunda"></td><td><input data-key="rotunda_condition"></td><td><input type="number" min="0" data-key="rotunda_w"></td><td><input type="number" min="0" data-key="rotunda_s"></td><td><input type="number" min="0" data-key="rotunda_l"></td><td><input type="number" min="0" max="100" data-key="rotunda_progress"></td><td id="rotunda_remaining">—</td><td><input data-key="rotunda_health" placeholder="Healthy / Damaged / Critical"></td></tr>
-          <tr><td><input data-key="name_courtyard" value="Blighted Courtyard & Well"></td><td><input data-key="courtyard_condition"></td><td><input type="number" min="0" data-key="courtyard_w"></td><td><input type="number" min="0" data-key="courtyard_s"></td><td><input type="number" min="0" data-key="courtyard_l"></td><td><input type="number" min="0" max="100" data-key="courtyard_progress"></td><td id="courtyard_remaining">—</td><td><input data-key="courtyard_health"></td></tr>
-          <tr><td><input data-key="name_tower" value="Highwatch Tower"></td><td><input data-key="tower_condition"></td><td><input type="number" min="0" data-key="tower_w"></td><td><input type="number" min="0" data-key="tower_s"></td><td><input type="number" min="0" data-key="tower_l"></td><td><input type="number" min="0" max="100" data-key="tower_progress"></td><td id="tower_remaining">—</td><td><input data-key="tower_health"></td></tr>
-          <tr><td><input data-key="name_gatehouse" value="River Gatehouse"></td><td><input data-key="gatehouse_condition"></td><td><input type="number" min="0" data-key="gatehouse_w"></td><td><input type="number" min="0" data-key="gatehouse_s"></td><td><input type="number" min="0" data-key="gatehouse_l"></td><td><input type="number" min="0" max="100" data-key="gatehouse_progress"></td><td id="gatehouse_remaining">—</td><td><input data-key="gatehouse_health"></td></tr>
-          <tr><td><input data-key="name_roost" value="Warden's Roost"></td><td><input data-key="roost_condition"></td><td><input type="number" min="0" data-key="roost_w"></td><td><input type="number" min="0" data-key="roost_s"></td><td><input type="number" min="0" data-key="roost_l"></td><td><input type="number" min="0" max="100" data-key="roost_progress"></td><td id="roost_remaining">—</td><td><input data-key="roost_health"></td></tr>
-          <tr><td><input data-key="name_rootvault" value="Root Vault"></td><td><input data-key="rootvault_condition"></td><td><input type="number" min="0" data-key="rootvault_w"></td><td><input type="number" min="0" data-key="rootvault_s"></td><td><input type="number" min="0" data-key="rootvault_l"></td><td><input type="number" min="0" max="100" data-key="rootvault_progress"></td><td id="rootvault_remaining">—</td><td><input data-key="rootvault_health"></td></tr>
-          <tr><td><input data-key="name_shrine" value="Thalara's Shrine"></td><td><input data-key="shrine_condition"></td><td><input type="number" min="0" data-key="shrine_w"></td><td><input type="number" min="0" data-key="shrine_s"></td><td><input type="number" min="0" data-key="shrine_l"></td><td><input type="number" min="0" max="100" data-key="shrine_progress"></td><td id="shrine_remaining">—</td><td><input data-key="shrine_health"></td></tr>
-          <tr><td><input data-key="name_rampart" value="Skyvault Rampart"></td><td><input data-key="rampart_condition"></td><td><input type="number" min="0" data-key="rampart_w"></td><td><input type="number" min="0" data-key="rampart_s"></td><td><input type="number" min="0" data-key="rampart_l"></td><td><input type="number" min="0" max="100" data-key="rampart_progress"></td><td id="rampart_remaining">—</td><td><input data-key="rampart_health"></td></tr>
-          <tr><td><input data-key="name_tunnels" value="Under-Bastion Tunnels"></td><td><input data-key="tunnels_condition"></td><td><input type="number" min="0" data-key="tunnels_w"></td><td><input type="number" min="0" data-key="tunnels_s"></td><td><input type="number" min="0" data-key="tunnels_l"></td><td><input type="number" min="0" max="100" data-key="tunnels_progress"></td><td id="tunnels_remaining">—</td><td><input data-key="tunnels_health"></td></tr>
+          <tr><td><input data-key="name_rotunda" value="Aegis Rotunda"></td><td><input data-key="rotunda_condition"></td><td><input type="number" min="0" data-key="rotunda_w"></td><td><input type="number" min="0" data-key="rotunda_s"></td><td><input type="number" min="0" data-key="rotunda_l"></td><td><input type="number" min="0" data-key="rotunda_wc"></td><td><input type="number" min="0" data-key="rotunda_sc"></td><td><input type="number" min="0" data-key="rotunda_lc"></td><td id="rotunda_remaining">W 0 / S 0 / L 0</td><td><input data-key="rotunda_health" placeholder="Healthy / Damaged / Critical"></td></tr>
+          <tr><td><input data-key="name_courtyard" value="Blighted Courtyard & Well"></td><td><input data-key="courtyard_condition"></td><td><input type="number" min="0" data-key="courtyard_w"></td><td><input type="number" min="0" data-key="courtyard_s"></td><td><input type="number" min="0" data-key="courtyard_l"></td><td><input type="number" min="0" data-key="courtyard_wc"></td><td><input type="number" min="0" data-key="courtyard_sc"></td><td><input type="number" min="0" data-key="courtyard_lc"></td><td id="courtyard_remaining">W 0 / S 0 / L 0</td><td><input data-key="courtyard_health"></td></tr>
+          <tr><td><input data-key="name_tower" value="Highwatch Tower"></td><td><input data-key="tower_condition"></td><td><input type="number" min="0" data-key="tower_w"></td><td><input type="number" min="0" data-key="tower_s"></td><td><input type="number" min="0" data-key="tower_l"></td><td><input type="number" min="0" data-key="tower_wc"></td><td><input type="number" min="0" data-key="tower_sc"></td><td><input type="number" min="0" data-key="tower_lc"></td><td id="tower_remaining">W 0 / S 0 / L 0</td><td><input data-key="tower_health"></td></tr>
+          <tr><td><input data-key="name_gatehouse" value="River Gatehouse"></td><td><input data-key="gatehouse_condition"></td><td><input type="number" min="0" data-key="gatehouse_w"></td><td><input type="number" min="0" data-key="gatehouse_s"></td><td><input type="number" min="0" data-key="gatehouse_l"></td><td><input type="number" min="0" data-key="gatehouse_wc"></td><td><input type="number" min="0" data-key="gatehouse_sc"></td><td><input type="number" min="0" data-key="gatehouse_lc"></td><td id="gatehouse_remaining">W 0 / S 0 / L 0</td><td><input data-key="gatehouse_health"></td></tr>
+          <tr><td><input data-key="name_roost" value="Warden's Roost"></td><td><input data-key="roost_condition"></td><td><input type="number" min="0" data-key="roost_w"></td><td><input type="number" min="0" data-key="roost_s"></td><td><input type="number" min="0" data-key="roost_l"></td><td><input type="number" min="0" data-key="roost_wc"></td><td><input type="number" min="0" data-key="roost_sc"></td><td><input type="number" min="0" data-key="roost_lc"></td><td id="roost_remaining">W 0 / S 0 / L 0</td><td><input data-key="roost_health"></td></tr>
+          <tr><td><input data-key="name_rootvault" value="Root Vault"></td><td><input data-key="rootvault_condition"></td><td><input type="number" min="0" data-key="rootvault_w"></td><td><input type="number" min="0" data-key="rootvault_s"></td><td><input type="number" min="0" data-key="rootvault_l"></td><td><input type="number" min="0" data-key="rootvault_wc"></td><td><input type="number" min="0" data-key="rootvault_sc"></td><td><input type="number" min="0" data-key="rootvault_lc"></td><td id="rootvault_remaining">W 0 / S 0 / L 0</td><td><input data-key="rootvault_health"></td></tr>
+          <tr><td><input data-key="name_shrine" value="Thalara's Shrine"></td><td><input data-key="shrine_condition"></td><td><input type="number" min="0" data-key="shrine_w"></td><td><input type="number" min="0" data-key="shrine_s"></td><td><input type="number" min="0" data-key="shrine_l"></td><td><input type="number" min="0" data-key="shrine_wc"></td><td><input type="number" min="0" data-key="shrine_sc"></td><td><input type="number" min="0" data-key="shrine_lc"></td><td id="shrine_remaining">W 0 / S 0 / L 0</td><td><input data-key="shrine_health"></td></tr>
+          <tr><td><input data-key="name_rampart" value="Skyvault Rampart"></td><td><input data-key="rampart_condition"></td><td><input type="number" min="0" data-key="rampart_w"></td><td><input type="number" min="0" data-key="rampart_s"></td><td><input type="number" min="0" data-key="rampart_l"></td><td><input type="number" min="0" data-key="rampart_wc"></td><td><input type="number" min="0" data-key="rampart_sc"></td><td><input type="number" min="0" data-key="rampart_lc"></td><td id="rampart_remaining">W 0 / S 0 / L 0</td><td><input data-key="rampart_health"></td></tr>
+          <tr><td><input data-key="name_tunnels" value="Under-Bastion Tunnels"></td><td><input data-key="tunnels_condition"></td><td><input type="number" min="0" data-key="tunnels_w"></td><td><input type="number" min="0" data-key="tunnels_s"></td><td><input type="number" min="0" data-key="tunnels_l"></td><td><input type="number" min="0" data-key="tunnels_wc"></td><td><input type="number" min="0" data-key="tunnels_sc"></td><td><input type="number" min="0" data-key="tunnels_lc"></td><td id="tunnels_remaining">W 0 / S 0 / L 0</td><td><input data-key="tunnels_health"></td></tr>
         </tbody>
       </table>
-      <div class="note">Structure names are editable. Set each building's full repair cost in Wood / Stone / Labor. The tracker auto-displays remaining cost based on progress %. Use Health / Damage for narrative structure state or siege tracking.</div> in Wood / Stone / Labor. The tracker auto-displays remaining cost based on progress %. Use Health / Damage for narrative structure state or siege tracking.</div>
+      <div class="note">Structure names are editable. Enter each building's total Cost and then track incoming Contributed resources. Remaining updates automatically.</div>
     </div>
 
     <div class="card span-4">
@@ -236,7 +251,31 @@
       <div class="field" style="margin-top:10px;"><label>Promotion Tracker <span class="help" tabindex="0">?<span class="tip"><strong>Promotion Tracker</strong>Use this to note who is eligible to advance. Good simple ladders: Guard to Veteran to Sergeant to Captain. Artisan to Master Artisan. Researcher to Arcane Custodian.</span></span></label><textarea data-key="promotion_tracker" placeholder="Guard -> Veteran -> Sergeant -> Captain&#10;Artisan -> Master Artisan&#10;Researcher -> Arcane Custodian"></textarea></div>
     </div>
 
-    <div class="card span-6">
+    <div class="card span-4">
+      <h2>Downtime Action Engine</h2>
+      <div class="engine-grid">
+        <div class="field"><label>Action Type <span class="help" tabindex="0">?<span class="tip"><strong>Action Type</strong>Use Repair for structure contributions. Use the others for guided logging and resolution.</span></span></label><select data-key="engine_type"><option>Repair</option><option>Recruit</option><option>Diplomacy</option><option>Patrol</option><option>Ritual</option><option>Trade</option><option>Custom</option></select></div>
+        <div class="field"><label>Target <span class="help" tabindex="0">?<span class="tip"><strong>Target</strong>For repairs, choose the exact structure name as shown in the repair grid. For non-repair actions, enter the faction, region, or subject involved.</span></span></label><input data-key="engine_target" placeholder="Aegis Rotunda / Pinebrook / North Road"></div>
+        <div class="field"><label>Wood Applied</label><input type="number" min="0" data-key="engine_wood"></div>
+        <div class="field"><label>Stone Applied</label><input type="number" min="0" data-key="engine_stone"></div>
+        <div class="field"><label>Labor Applied</label><input type="number" min="0" data-key="engine_labor"></div>
+        <div class="field"><label>Gold Spent</label><input type="number" min="0" data-key="engine_gold"></div>
+        <div class="field"><label>Outcome</label><select data-key="engine_outcome"><option>Automatic</option><option>Success</option><option>Partial</option><option>Failure</option></select></div>
+      </div>
+      <div class="mini3" style="margin-top:10px;">
+        <div class="field"><label>Recommended Roll</label><input data-key="engine_roll" placeholder="Arcana DC 18 / Persuasion DC 15"></div>
+        <div class="field"><label>Pressure Change</label><input data-key="engine_pressure" placeholder="Political +1 / Fey +1 / Blight -1"></div>
+        <div class="field"><label>Short Result</label><input data-key="engine_result" placeholder="Repaired outer wall / gained 4 laborers"></div>
+      </div>
+      <div class="field" style="margin-top:10px;"><label>Action Notes</label><textarea data-key="engine_notes" placeholder="What happened, who was involved, and any GM notes."></textarea></div>
+      <div class="engine-actions">
+        <button onclick="applyDowntimeAction()">Apply Action</button>
+        <button class="secondary" onclick="clearActionEngine()">Clear Engine</button>
+      </div>
+      <div class="note">Repair actions can automatically add contributions to a matching structure. Other actions create clean downtime log entries for the GM.</div>
+    </div>
+
+    <div class="card span-4">
       <h2>Faction Reputation</h2>
       <table>
         <thead><tr><th>Faction</th><th>Rep (0-5)</th><th>Notes</th></tr></thead>
@@ -251,19 +290,31 @@
       </table>
     </div>
 
-    <div class="card span-6">
+    <div class="card span-12">
+      <h2>Downtime History</h2>
+      <div id="downtime_history" class="history-log"></div>
+      <div class="engine-actions">
+        <button class="secondary" onclick="clearDowntimeHistory()">Clear Downtime History</button>
+      </div>
+    </div>
+
+    <div class="card span-12">
       <h2>Threats & Session Notes</h2>
-      <div class="field"><label>Current Threats</label><textarea data-key="current_threats"></textarea></div>
-      <div class="field" style="margin-top:10px;"><label>Recent Events</label><textarea data-key="recent_events"></textarea></div>
-      <div class="field" style="margin-top:10px;"><label>GM Notes</label><textarea data-key="gm_notes"></textarea></div>
+      <div class="mini3">
+        <div class="field"><label>Current Threats</label><textarea data-key="current_threats"></textarea></div>
+        <div class="field"><label>Recent Events</label><textarea data-key="recent_events"></textarea></div>
+        <div class="field"><label>GM Notes</label><textarea data-key="gm_notes"></textarea></div>
+      </div>
     </div>
   </div>
 
   <div class="sub" style="font-size:12px; margin-top:18px;">Free GM tool. Copy, modify, and reuse for your own campaign.</div>
 </div>
+
 <script>
-const STORAGE_KEY = 'thalara_bastion_tracker_v7';
+const STORAGE_KEY = 'thalara_bastion_tracker_v8';
 const statusEl = document.getElementById('saveStatus');
+const historyEl = document.getElementById('downtime_history');
 const fields = Array.from(document.querySelectorAll('[data-key]'));
 const costRows = ['rotunda','courtyard','tower','gatehouse','roost','rootvault','shrine','rampart','tunnels'];
 const defaultNames = {
@@ -277,39 +328,36 @@ const defaultNames = {
   name_rampart:'Skyvault Rampart',
   name_tunnels:'Under-Bastion Tunnels'
 };
+const structureMap = {
+  rotunda:'name_rotunda',
+  courtyard:'name_courtyard',
+  tower:'name_tower',
+  gatehouse:'name_gatehouse',
+  roost:'name_roost',
+  rootvault:'name_rootvault',
+  shrine:'name_shrine',
+  rampart:'name_rampart',
+  tunnels:'name_tunnels'
+};
 
 function getData(){
   const data = {};
   fields.forEach(f => data[f.dataset.key] = f.value);
+  data.__downtime_history = historyEl ? historyEl.textContent : '';
   return data;
 }
 
 function setData(data){
   fields.forEach(f => {
-    if (Object.prototype.hasOwnProperty.call(data, f.dataset.key)) {
-      f.value = data[f.dataset.key];
-    }
+    if (Object.prototype.hasOwnProperty.call(data, f.dataset.key)) f.value = data[f.dataset.key];
   });
+  if (historyEl && typeof data.__downtime_history === 'string') historyEl.textContent = data.__downtime_history;
 }
 
-function num(v){
-  const n = parseFloat(v);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function getField(key){
-  return document.querySelector(`[data-key="${key}"]`);
-}
-
-function getVal(key){
-  const el = getField(key);
-  return el ? el.value : '';
-}
-
-function setVal(key, value){
-  const el = getField(key);
-  if (el) el.value = value;
-}
+function num(v){ const n = parseFloat(v); return Number.isFinite(n) ? n : 0; }
+function getField(key){ return document.querySelector(`[data-key="${key}"]`); }
+function getVal(key){ const el = getField(key); return el ? el.value : ''; }
+function setVal(key, value){ const el = getField(key); if (el) el.value = value; }
 
 function pressureClass(value){
   const v = num(value);
@@ -329,31 +377,33 @@ function actionBudgetForTier(tier){
   }
 }
 
+function findStructureKeyByName(name){
+  const target = (name || '').trim().toLowerCase();
+  if (!target) return null;
+  for (const [key, nameKey] of Object.entries(structureMap)) {
+    const currentName = (getVal(nameKey) || '').trim().toLowerCase();
+    if (currentName === target) return key;
+  }
+  return null;
+}
+
+function clampRemaining(cost, contributed){
+  return Math.max(0, cost - contributed);
+}
+
 function updatePressureDisplays(){
   const pt = num(getVal('political_tension'));
   const fa = num(getVal('fey_attention'));
   const bp = num(getVal('blight_pressure'));
   const mt = num(getVal('military_threat'));
 
-  const displays = {
-    pt_display: pt,
-    fa_display: fa,
-    bp_display: bp,
-    mt_display: mt
-  };
-
+  const displays = { pt_display: pt, fa_display: fa, bp_display: bp, mt_display: mt };
   Object.entries(displays).forEach(([id, value]) => {
     const el = document.getElementById(id);
     if (el) el.textContent = String(value);
   });
 
-  const pills = {
-    pt_pill: pt,
-    fa_pill: fa,
-    bp_pill: bp,
-    mt_pill: mt
-  };
-
+  const pills = { pt_pill: pt, fa_pill: fa, bp_pill: bp, mt_pill: mt };
   Object.entries(pills).forEach(([id, value]) => {
     const el = document.getElementById(id);
     if (el) el.className = 'pill ' + pressureClass(value);
@@ -370,8 +420,7 @@ function updatePressureDisplays(){
 function updateRunningCosts(){
   const weeklyWages = num(getVal('weekly_wages'));
   const monthlyMaintenance = num(getVal('monthly_maintenance'));
-  const total = (weeklyWages * 4) + monthlyMaintenance;
-  setVal('running_costs', total);
+  setVal('running_costs', (weeklyWages * 4) + monthlyMaintenance);
 }
 
 function updateActionBudget(){
@@ -380,24 +429,23 @@ function updateActionBudget(){
 
 function updateRepairMath(){
   let incomplete = 0;
-
   costRows.forEach(key => {
     const w = num(getVal(key + '_w'));
     const s = num(getVal(key + '_s'));
     const l = num(getVal(key + '_l'));
-    const pRaw = getVal(key + '_progress');
-    const p = Math.max(0, Math.min(100, num(pRaw)));
+    const wc = num(getVal(key + '_wc'));
+    const sc = num(getVal(key + '_sc'));
+    const lc = num(getVal(key + '_lc'));
 
-    const rw = Math.ceil(w * (100 - p) / 100);
-    const rs = Math.ceil(s * (100 - p) / 100);
-    const rl = Math.ceil(l * (100 - p) / 100);
+    const rw = clampRemaining(w, wc);
+    const rs = clampRemaining(s, sc);
+    const rl = clampRemaining(l, lc);
 
     const cell = document.getElementById(key + '_remaining');
     if (cell) cell.textContent = `W ${rw} / S ${rs} / L ${rl}`;
 
-    if (p < 100) incomplete += 1;
+    if (rw > 0 || rs > 0 || rl > 0) incomplete += 1;
   });
-
   setVal('damaged_count', incomplete);
 }
 
@@ -406,6 +454,75 @@ function updateDerived(){
   updateRunningCosts();
   updateActionBudget();
   updateRepairMath();
+}
+
+function appendDowntimeHistory(line){
+  if (!historyEl) return;
+  const current = historyEl.textContent.trim();
+  historyEl.textContent = current ? current + '\n' + line : line;
+}
+
+function applyDowntimeAction(){
+  const type = getVal('engine_type');
+  const target = getVal('engine_target').trim();
+  const wood = num(getVal('engine_wood'));
+  const stone = num(getVal('engine_stone'));
+  const labor = num(getVal('engine_labor'));
+  const gold = num(getVal('engine_gold'));
+  const outcome = getVal('engine_outcome');
+  const roll = getVal('engine_roll').trim();
+  const pressure = getVal('engine_pressure').trim();
+  const result = getVal('engine_result').trim();
+  const notes = getVal('engine_notes').trim();
+  const downtimePeriod = getVal('downtime_period').trim() || '—';
+
+  if (!target) {
+    alert('Enter a target before applying the action.');
+    return;
+  }
+
+  if (type === 'Repair') {
+    const structureKey = findStructureKeyByName(target);
+    if (structureKey) {
+      setVal(structureKey + '_wc', num(getVal(structureKey + '_wc')) + wood);
+      setVal(structureKey + '_sc', num(getVal(structureKey + '_sc')) + stone);
+      setVal(structureKey + '_lc', num(getVal(structureKey + '_lc')) + labor);
+    }
+  }
+
+  if (wood > 0) setVal('wood', Math.max(0, num(getVal('wood')) - wood));
+  if (stone > 0) setVal('stone', Math.max(0, num(getVal('stone')) - stone));
+  if (labor > 0) setVal('labor', Math.max(0, num(getVal('labor')) - labor));
+  if (gold > 0) setVal('gold', Math.max(0, num(getVal('gold')) - gold));
+
+  let line = `Downtime ${downtimePeriod}: ${type} -> ${target}`;
+  const parts = [];
+  if (wood || stone || labor) parts.push(`W ${wood} / S ${stone} / L ${labor}`);
+  if (gold) parts.push(`Gold ${gold}`);
+  if (outcome) parts.push(`Outcome: ${outcome}`);
+  if (roll) parts.push(`Roll: ${roll}`);
+  if (result) parts.push(result);
+  if (pressure) parts.push(`Pressure: ${pressure}`);
+  if (notes) parts.push(notes);
+  if (parts.length) line += ' | ' + parts.join(' | ');
+
+  appendDowntimeHistory(line);
+  clearActionEngine(false);
+  updateDerived();
+  saveNow();
+}
+
+function clearActionEngine(update = true){
+  ['engine_target','engine_wood','engine_stone','engine_labor','engine_gold','engine_roll','engine_pressure','engine_result','engine_notes'].forEach(k => setVal(k, ''));
+  setVal('engine_type', 'Repair');
+  setVal('engine_outcome', 'Automatic');
+  if (update) updateDerived();
+}
+
+function clearDowntimeHistory(){
+  if (!confirm('Clear downtime history?')) return;
+  if (historyEl) historyEl.textContent = '';
+  saveNow();
 }
 
 function saveNow(){
@@ -439,6 +556,7 @@ function resetTracker(){
       f.value = '';
     }
   });
+  if (historyEl) historyEl.textContent = '';
   updateDerived();
   if (statusEl) statusEl.textContent = 'Tracker reset.';
 }
